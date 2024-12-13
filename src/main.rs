@@ -21,6 +21,9 @@ struct Args {
 }
 
 fn main() {
+
+    use Commands::*;
+
     let mut logger = env_logger::builder();
 
     if cfg!(debug_assertions) {
@@ -34,20 +37,24 @@ fn main() {
     println!("{:?}", t);
 
     let result = match args.command {
-        Commands::Init => {
+
+        Init => {
             debug!("Command executed: Init");
             // Todo - probably want to make some init args, like project type etc
             executions::create_project(None)
         },
-        Commands::New(new_args) => {
+
+        New(new_args) => {
             debug!("Command executed: New\nArgs: {:?}", new_args);
             executions::create_project(Some(new_args))
         },
-        Commands::Build => {
+
+        Build => {
             debug!("Command executed: Build");
-            unimplemented!()
+            executions::build_project(None)
         },
-        Commands::Run => {
+        
+        Run => {
             debug!("Command executed: Run");
             unimplemented!()
         }

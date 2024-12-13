@@ -1,4 +1,6 @@
-use std::{error::Error, fmt::Display};
+use std::{error::Error, fmt::Display, io};
+
+use serde::de;
 
 pub type EmbargoResult = Result<String, EmbargoError>;
 
@@ -23,3 +25,33 @@ impl Display for EmbargoError {
 }
 
 impl Error for EmbargoError {}
+
+impl From<Box<dyn Error>> for EmbargoError {
+    fn from(value: Box<dyn Error>) -> Self {
+        Self::new(&value.to_string())
+    }
+}
+
+impl From<io::Error> for EmbargoError {
+    fn from(value: io::Error) -> Self {
+        Self::new(&value.to_string())
+    }
+}
+
+impl From<toml::de::Error> for EmbargoError {
+    fn from(value: toml::de::Error) -> Self {
+        Self::new(value.message())
+    }
+}
+
+impl From<toml::ser::Error> for EmbargoError {
+    fn from(value: toml::ser::Error) -> Self {
+        Self::new(&value.to_string())
+    }
+}
+
+impl From<walkdir::Error> for EmbargoError {
+    fn from(value: walkdir::Error) -> Self {
+        Self::new(&value.to_string())
+    }
+}

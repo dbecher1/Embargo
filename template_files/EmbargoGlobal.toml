@@ -1,0 +1,11 @@
+# Embargo global settings
+# These may all be overridden in a local project
+
+# if false, does not initialize a new git repository on project creation
+use_git = true
+
+cxx_compiler = "g++"
+cxx_version = "c++17"
+
+c_compiler = "gcc" # not yet implemented
+
