@@ -6,7 +6,7 @@ use crate::error::EmbargoError;
 use super::serde_helpers::*;
 
 
-#[derive(Serialize, Deserialize, Debug, PartialEq)]
+#[derive(Clone, Serialize, Deserialize, Debug, Hash, Eq, PartialEq, PartialOrd)]
 pub enum CxxFileType {
     Source,
     Header,
@@ -16,7 +16,7 @@ fn modified_default() -> bool {
     false
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Clone, Serialize, Deserialize, Debug, Hash, Eq, PartialEq, PartialOrd)]
 pub struct CxxFile {
     pub file_type: CxxFileType,
 
@@ -28,8 +28,6 @@ pub struct CxxFile {
     modified: u64,
 
     dependencies: Vec<PathBuf>,
-
-    pub dependees: Vec<PathBuf>,
 }
 
 impl CxxFile {
@@ -42,14 +40,12 @@ impl CxxFile {
                 return Err(EmbargoError::new(&e))
             }
         };
-        let dependees = Vec::new();
 
         Ok(Self {
             file_type,
             changed,
             modified,
             dependencies,
-            dependees
         })
     }
 
@@ -70,12 +66,11 @@ impl CxxFile {
     }
 }
 
-#[derive(Serialize, Deserialize, Debug)]
-pub struct ObjectFile {
-    #[serde(serialize_with = "serialize_modified", deserialize_with = "deserialize_modified")]
-    modified: u64,
+impl Ord for CxxFile {
+    fn cmp(&self, other: &Self) -> std::cmp::Ordering {
+        self.dependencies.len().cmp(&other.dependencies.len())
+    }
 }
-
 fn gen_deps(path: &Path) -> Result<Vec<PathBuf>, String> {
 
     // TODO: get compiler

@@ -1,7 +1,8 @@
-use std::{cell::RefCell, env, ffi::OsStr, fs::{self, File}, hash::{DefaultHasher, Hash, Hasher}, io::Write, path::Path, process::Command, time::SystemTime};
+use std::{cell::RefCell, env, ffi::OsStr, fs::{self, File}, hash::{DefaultHasher, Hash, Hasher}, io::Write, path::{Path, PathBuf}, process::Command};
 use build_file::EmbargoBuildFile;
 use cxx_file::{CxxFile, CxxFileType};
 use log::debug;
+use topological_sort::TopologicalSort;
 use walkdir::{DirEntry, WalkDir};
 
 use crate::{commands::BuildArgs, embargo_toml::{EmbargoFile, GlobalEmbargoFile}, error::{EmbargoError, EmbargoResult}};
@@ -106,57 +107,51 @@ pub fn build_project(args: BuildArgs, global_file: &GlobalEmbargoFile, embargo_t
             new_embargo_build.source_files.insert(path.to_path_buf(), RefCell::new(new_cxx_file));
         }
 
-        for (path, file) in new_embargo_build.source_files.iter() {
-            for dep in file.borrow().dependencies() {
-                if let Some(dep) = new_embargo_build.source_files.get(dep) {
-                    dep.borrow_mut().dependees.push(path.to_path_buf());
-                }
-            }
-        }
-
         // The bool flag is set if this is a completely fresh build
         let (fresh_build, files_changed) = if let Some(old_build) = embargo_build {
 
             let mut files_changed = false; // flag that's set once a change has been detected - prevents rebuilds if nothing has changed
 
             for (path, file) in new_embargo_build.source_files.iter() {
-
-                if file.borrow().changed() {
-                    continue;
-                }
-
                 // This is the comparison to see if this file was modified
                 // If this is not some, this is a new file in the build
                 // If this is some, check to see if the file was modified
                 if let Some(last_file) = old_build.source_files.get(path) {
                     if file.borrow().modified() != last_file.borrow().modified() {
-
                         if !files_changed {
                             files_changed = true;
                         }
 
                         file.borrow_mut().set_changed();
                     }
-                    if file.borrow().changed() {
-                        for dep in &file.borrow().dependees {
-                            if let Some(dependee) = new_embargo_build.source_files.get(dep) {
-                                dependee.borrow_mut().set_changed();
-                            }
+                }
+            }
+
+            // check dependencies once we've done the fist pass 
+            if files_changed {
+
+                let mut ts = TopologicalSort::<PathBuf>::new();
+                
+                for (path, file) in new_embargo_build.source_files.iter() {
+                    for dep in file.borrow().dependencies() {
+                        ts.add_dependency(dep, path);
+                    }
+                }
+                
+                while let Some(path) = ts.pop() {
+                    // look up the file
+                    if let Some(file) = new_embargo_build.source_files.get(&path) {
+
+                        // skip if already marked changed
+                        if file.borrow().changed() {
+                            continue;
                         }
-                        if file.borrow().file_type == CxxFileType::Source {
-                            for dep in file.borrow().dependencies() {
-                                if let Some(dep) = new_embargo_build.source_files.get(dep) {
-                                    {
-                                        dep.borrow_mut().set_changed();
-                                    }
-                                    for d_ in &dep.borrow().dependees {
-                                        if let Some(d_) = new_embargo_build.source_files.get(d_) {
-                                            if d_.borrow().changed() {
-                                                continue;
-                                            }
-                                            d_.borrow_mut().set_changed();
-                                        }
-                                    }
+                        let deps = file.borrow().dependencies().to_vec();
+                        for dep_path in &deps {
+                            // look up the dependency files and check if those are changed
+                            if let Some(dep_file) = new_embargo_build.source_files.get(dep_path) {
+                                if dep_file.borrow().changed() {
+                                    file.borrow_mut().set_changed();
                                 }
                             }
                         }
@@ -202,6 +197,7 @@ pub fn build_project(args: BuildArgs, global_file: &GlobalEmbargoFile, embargo_t
         let _ = fs::create_dir_all(&bin_path);
         bin_path.push(&embargo_toml.package.name);
 
+        // compilation happens here
         for (path, _) in new_embargo_build.source_files
             .iter()
             .filter(|(p, f)| (
@@ -212,7 +208,6 @@ pub fn build_project(args: BuildArgs, global_file: &GlobalEmbargoFile, embargo_t
             {
                 let mut object_path = object_path.clone();
                 
-                // TODO: get compiler from file
                 let mut command = Command::new(global_file.cxx_compiler());
 
                 let mut args = Vec::new();
@@ -246,8 +241,7 @@ pub fn build_project(args: BuildArgs, global_file: &GlobalEmbargoFile, embargo_t
         if !files_changed && !embargo_toml_modified {
             return Ok(Some("No changed files detected.".to_owned()))
         }
-            // Compile!
-        println!("{:?}", new_embargo_build);
+
         debug!("Linking object files...");
 
         let objects = WalkDir::new(object_path)
@@ -284,8 +278,6 @@ pub fn build_project(args: BuildArgs, global_file: &GlobalEmbargoFile, embargo_t
             Err(_) => None,
         };
         
-
-
         let new_str = toml::to_string_pretty(&new_embargo_build)?;
         if let Some(mut file) = new_buildfile {
             file.write(new_str.as_bytes())?;
