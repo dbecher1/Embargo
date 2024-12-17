@@ -1,26 +1,39 @@
-use std::{cell::RefCell, env, ffi::OsStr, fs::{self, File}, hash::{DefaultHasher, Hash, Hasher}, io::Write, path::{Path, PathBuf}, process::Command};
+use std::{
+    cell::RefCell,
+    ffi::OsStr,
+    fs::{self, File},
+    hash::{DefaultHasher, Hash, Hasher},
+    io::Write,
+    path::{Path, PathBuf},
+    process::Command,
+    time::Instant
+};
 use build_file::EmbargoBuildFile;
 use cxx_file::{CxxFile, CxxFileType};
 use log::debug;
 use topological_sort::TopologicalSort;
 use walkdir::{DirEntry, WalkDir};
-
-use crate::{commands::BuildArgs, embargo_toml::{EmbargoFile, GlobalEmbargoFile}, error::{EmbargoError, EmbargoResult}};
+use crate::{
+    commands::BuildArgs,
+    embargo_toml::{EmbargoFile, GlobalEmbargoFile},
+    error::{EmbargoError, EmbargoResult}
+};
 
 mod cxx_file;
 mod build_file;
 mod serde_helpers;
 
 #[allow(unused_variables)]
-pub fn build_project(args: BuildArgs, global_file: &GlobalEmbargoFile, embargo_toml: &EmbargoFile) -> EmbargoResult {
+pub fn build_project(args: BuildArgs, global_file: &GlobalEmbargoFile, embargo_toml: &EmbargoFile, embargo_toml_path: &Path) -> EmbargoResult {
 
-    let mut cwd = env::current_dir()?;
+    let now = Instant::now();
+    
+    let mut cwd = embargo_toml_path.to_path_buf();
 
-    if cfg!(debug_assertions) {
-        cwd.push(".test_build");
-    }
+    // pop the toml file from the path
+    cwd.pop();
 
-    debug!("{}", cwd.display());
+    println!("Compiling {} v{} ({})", embargo_toml.package.name, embargo_toml.package.version, cwd.display());
 
     // Check to see if there are overridden values in the Embargo.toml file
     let mut src_dir = cwd.clone();
@@ -77,10 +90,12 @@ pub fn build_project(args: BuildArgs, global_file: &GlobalEmbargoFile, embargo_t
         false
     };
     
+    
     for entry in WalkDir::new(src_dir.clone())
         .into_iter()
         .filter_map(|e| e.ok())
         .filter(|e| is_valid_file_ext(e.path())) {
+            
             let mod_time = entry.metadata()?.modified()?;
 
             let path = entry.path();
@@ -197,8 +212,9 @@ pub fn build_project(args: BuildArgs, global_file: &GlobalEmbargoFile, embargo_t
         let _ = fs::create_dir_all(&bin_path);
         bin_path.push(&embargo_toml.package.name);
 
-        // compilation happens here
-        for (path, _) in new_embargo_build.source_files
+        // COMPILE
+        
+        for (path, file) in new_embargo_build.source_files
             .iter()
             .filter(|(p, f)| (
                     f.borrow().changed() ||
@@ -213,6 +229,7 @@ pub fn build_project(args: BuildArgs, global_file: &GlobalEmbargoFile, embargo_t
                 let mut args = Vec::new();
                 args.push("-c");
                 args.push(path.as_os_str().to_str().unwrap_or_default());
+
                 args.push("-o");
 
                 let filename = path.file_name().unwrap_or_default();
@@ -227,7 +244,7 @@ pub fn build_project(args: BuildArgs, global_file: &GlobalEmbargoFile, embargo_t
                 match command.args(args).output() {
                     Ok(output) => {
                         if output.status.success() {
-                            println!("Compiling {}...", filename);
+                            debug!("Compiling {}...", filename);
                         } else {
                             return Err(EmbargoError::new(&String::from_utf8_lossy(&output.stderr)));
                         }
@@ -283,7 +300,11 @@ pub fn build_project(args: BuildArgs, global_file: &GlobalEmbargoFile, embargo_t
             file.write(new_str.as_bytes())?;
         }
 
-    Ok(Some(String::from("Successfully compiled project.")))
+    let build_time = (now.elapsed().as_millis() as f32) / 1000.;
+
+    println!("Finished compiling project in {build_time:.2}s");
+
+    Ok(None)
 }
 
 fn hash_helper<T: Hash>(t: T) -> u64 {

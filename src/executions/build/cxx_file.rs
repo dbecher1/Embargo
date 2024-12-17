@@ -6,7 +6,7 @@ use crate::error::EmbargoError;
 use super::serde_helpers::*;
 
 
-#[derive(Clone, Serialize, Deserialize, Debug, Hash, Eq, PartialEq, PartialOrd)]
+#[derive(Clone, Serialize, Deserialize, Debug)]
 pub enum CxxFileType {
     Source,
     Header,
@@ -16,7 +16,7 @@ fn modified_default() -> bool {
     false
 }
 
-#[derive(Clone, Serialize, Deserialize, Debug, Hash, Eq, PartialEq, PartialOrd)]
+#[derive(Clone, Serialize, Deserialize, Debug)]
 pub struct CxxFile {
     pub file_type: CxxFileType,
 
@@ -66,11 +66,6 @@ impl CxxFile {
     }
 }
 
-impl Ord for CxxFile {
-    fn cmp(&self, other: &Self) -> std::cmp::Ordering {
-        self.dependencies.len().cmp(&other.dependencies.len())
-    }
-}
 fn gen_deps(path: &Path) -> Result<Vec<PathBuf>, String> {
 
     // TODO: get compiler

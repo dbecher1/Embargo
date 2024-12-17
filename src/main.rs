@@ -12,14 +12,18 @@ mod embargo_toml;
 mod executions;
 mod error;
 
-static LOG_LEVEL: LevelFilter = LevelFilter::Debug;
-// static LOG_LEVEL: LevelFilter = LevelFilter::Off;
+static LOG_LEVEL_DEBUG: LevelFilter = LevelFilter::Trace;
+static LOG_LEVEL_RELEASE: LevelFilter = LevelFilter::Off;
 
 #[derive(Parser, Debug)]
 #[command(version, about, long_about = None)]
 struct Args {
     #[command(subcommand)]
     command: Commands,
+
+    /// Manually set the logging level
+    #[arg(long)]
+    debug_log: bool,
 }
 
 fn main() {
@@ -37,18 +41,20 @@ fn real_main() -> EmbargoResult {
 
     use Commands::*;
 
+    let args = Args::parse();
+
     let mut logger = env_logger::builder();
 
-    if cfg!(debug_assertions) {
-        logger.filter_level(LOG_LEVEL);
+    if cfg!(debug_assertions) || args.debug_log {
+        logger.filter_level(LOG_LEVEL_DEBUG);
+    } else {
+        logger.filter_level(LOG_LEVEL_RELEASE);
     }
     logger.init();
-
-    let args = Args::parse();
    
     let global_file = GlobalEmbargoFile::try_read()?;
 
-    let (embargo_toml, embargo_toml_path) = EmbargoFile::read_file()?;
+    let (embargo_toml, embargo_toml_path) = EmbargoFile::read_file().unwrap_or_default();
     debug!("Embargo.toml read: {:?}\nPath: {}", embargo_toml, embargo_toml_path.display());
 
     return match args.command {
@@ -66,7 +72,7 @@ fn real_main() -> EmbargoResult {
 
         Build(build_args) => {
             debug!("Command executed: Build");
-            executions::build_project(build_args, &global_file, &embargo_toml)
+            executions::build_project(build_args, &global_file, &embargo_toml, &embargo_toml_path)
         },
         
         Run(run_args) => {

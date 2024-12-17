@@ -1,5 +1,5 @@
 
-use std::{path::Path, process::Command};
+use std::{path::{Path, PathBuf}, process::Command};
 
 use crate::{commands::RunArgs, embargo_toml::{EmbargoFile, GlobalEmbargoFile}, error::EmbargoResult};
 
@@ -8,15 +8,19 @@ use super::build_project;
 
 pub fn run_project(run_args: RunArgs, global_file: &GlobalEmbargoFile, embargo_toml: &EmbargoFile, embargo_toml_path: &Path) -> EmbargoResult {
 
-    build_project(run_args.build_args, global_file, embargo_toml)?;
+    build_project(run_args.build_args, global_file, embargo_toml, embargo_toml_path)?;
 
     // we have where Embargo.toml is, find the path to the executable
     let mut exec_path = embargo_toml_path.to_path_buf();
     exec_path.pop(); // remove Embargo.toml from the path
+
+    // for the displ
+    let mut final_run_path = PathBuf::new();
     
     // If overrides exist in the local Embargo.toml
     if let Some(build) = &embargo_toml.package.build_path {
         exec_path.push(&build);
+        final_run_path.push(&build);
     } else {
         exec_path.push(&global_file.build_path);
     }
@@ -53,7 +57,7 @@ pub fn run_project(run_args: RunArgs, global_file: &GlobalEmbargoFile, embargo_t
             vec![]
         }
     };
-    println!("{}", exec_path.display());
+    println!("Running \"{}\"", exec_path.display());
 
     let mut run = Command::new(exec_path);
     let run = run
