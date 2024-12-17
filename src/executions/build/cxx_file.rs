@@ -1,4 +1,4 @@
-use std::{path::{self, Path, PathBuf}, process, str::FromStr};
+use std::{path::{Path, PathBuf}, process, str::FromStr};
 
 use serde::{de::{self, Visitor}, Deserialize, Deserializer, Serialize, Serializer};
 
@@ -107,16 +107,6 @@ impl CxxFile {
 pub struct ObjectFile {
     #[serde(serialize_with = "serialize_modified", deserialize_with = "deserialize_modified")]
     modified: u64,
-}
-
-impl ObjectFile {
-
-    pub fn new(modified: u64) -> Self {
-        Self {
-            modified
-        }
-    }
-
 }
 
 fn gen_deps(path: &Path) -> Result<Vec<PathBuf>, String> {

@@ -1,21 +1,16 @@
-use std::{cell::RefCell, env, ffi::OsStr, fs::{self, File}, hash::{DefaultHasher, Hash, Hasher}, io::Write, path::{Path, PathBuf}, process::Command, time::SystemTime};
-
-use ahash::AHashSet;
+use std::{cell::RefCell, env, ffi::OsStr, fs::{self, File}, hash::{DefaultHasher, Hash, Hasher}, io::Write, path::Path, process::Command, time::SystemTime};
 use build_file::EmbargoBuildFile;
 use cxx_file::{CxxFile, CxxFileType};
-use log::{debug, log_enabled, LevelFilter};
+use log::debug;
 use walkdir::{DirEntry, WalkDir};
 
-use crate::{embargo_toml::{const_values::{DEFAULT_BIN_PATH, DEFAULT_BUILD_PATH, DEFAULT_OBJECT_PATH, DEFAULT_SRC_PATH}, EmbargoFile, GlobalEmbargoFile}, error::{EmbargoError, EmbargoResult}};
+use crate::{commands::BuildArgs, embargo_toml::{const_values::{DEFAULT_BIN_PATH, DEFAULT_BUILD_PATH, DEFAULT_OBJECT_PATH, DEFAULT_SRC_PATH}, EmbargoFile, GlobalEmbargoFile}, error::{EmbargoError, EmbargoResult}};
 
 mod cxx_file;
 mod build_file;
 
-pub struct BuildFlags; // TODO - placeholder
-
-pub fn build_project(flags: BuildFlags) -> EmbargoResult {
-
-    let global_file = GlobalEmbargoFile::try_read()?;
+#[allow(unused_variables)]
+pub fn build_project(args: BuildArgs, global_file: &GlobalEmbargoFile) -> EmbargoResult {
 
     // TODO: for right now building will only work when ran in the same directory as the Embargo.toml file
     // I'd like to see if I can make it work within a child directory
@@ -91,9 +86,7 @@ pub fn build_project(flags: BuildFlags) -> EmbargoResult {
 
             let ext = path.extension().unwrap_or_default();
             
-            let mut hasher = DefaultHasher::new();
-            mod_time.hash(&mut hasher);
-            let hash = hasher.finish();
+            let hash = hash_systime(mod_time);
 
             let file_type = if is_source(ext) {
                 CxxFileType::Source
@@ -245,7 +238,7 @@ pub fn build_project(flags: BuildFlags) -> EmbargoResult {
                 }
             }
         if !files_changed {
-            return Ok("No changed files detected.".to_owned())
+            return Ok(Some("No changed files detected.".to_owned()))
         }
         debug!("Linking object files...");
 
@@ -288,7 +281,7 @@ pub fn build_project(flags: BuildFlags) -> EmbargoResult {
             file.write(new_str.as_bytes())?;
         }
 
-    Ok(String::from("Successfully compiled project."))
+    Ok(Some(String::from("Successfully compiled project.")))
 }
 
 fn hash_systime(time: SystemTime) -> u64 {

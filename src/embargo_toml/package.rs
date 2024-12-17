@@ -16,6 +16,8 @@ pub struct EmbargoPackageConfig {
 }
 
 impl EmbargoPackageConfig {
+
+    #[allow(unused)]
     pub fn set_name(&mut self, name: &str) {
         self.name = name.to_owned();
     }

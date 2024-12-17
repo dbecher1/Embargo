@@ -1,9 +1,13 @@
 
 use clap::Subcommand;
 pub use new::NewArgs;
+pub use build::BuildArgs;
+pub use run::RunArgs;
 
 mod new;
 mod project_type;
+mod build;
+mod run;
 
 #[derive(Subcommand, Debug)]
 pub enum Commands {
@@ -15,9 +19,12 @@ pub enum Commands {
     New(NewArgs),
 
     /// Compile an Embargo project.
-    Build,
+    Build(BuildArgs),
+
+    /// Compile and run an Embargo project.
+    Run(RunArgs),
+
     Install,
     Uninstall,
     Add,
-    Run,
 }

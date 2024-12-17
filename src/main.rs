@@ -1,6 +1,7 @@
 
 use clap::Parser;
-use executions::BuildFlags;
+use embargo_toml::{EmbargoFile, GlobalEmbargoFile};
+use error::EmbargoResult;
 use log::LevelFilter;
 use commands::Commands;
 
@@ -22,6 +23,17 @@ struct Args {
 }
 
 fn main() {
+    match real_main() {
+        Ok(msg) => {
+            if let Some(msg) = msg {
+                println!("{}", msg);
+            }
+        }
+        Err(e) => eprintln!("An error has occurred: {}", e),
+    }
+}
+
+fn real_main() -> EmbargoResult {
 
     use Commands::*;
 
@@ -33,11 +45,13 @@ fn main() {
     logger.init();
 
     let args = Args::parse();
-    // debug!("Arguments: {:?}", args);
-    let t = std::env::var("EMBARGO_HOME");
-    println!("{:?}", t);
+   
+    let global_file = GlobalEmbargoFile::try_read()?;
 
-    let result = match args.command {
+    let embargo_toml = EmbargoFile::read_file()?;
+    println!("{:?}", embargo_toml);
+
+    return match args.command {
 
         Init => {
             debug!("Command executed: Init");
@@ -50,21 +64,15 @@ fn main() {
             executions::create_project(Some(new_args))
         },
 
-        Build => {
+        Build(build_args) => {
             debug!("Command executed: Build");
-            let b = BuildFlags{};
-            executions::build_project(b)
+            executions::build_project(build_args, &global_file)
         },
         
-        Run => {
+        Run(run_args) => {
             debug!("Command executed: Run");
-            unimplemented!()
+            executions::run_project(run_args, &global_file)
         }
         _ => unimplemented!(),
-    };
-
-    match result {
-        Ok(msg) => println!("{}", msg),
-        Err(e) => eprintln!("An error has occurred: {}", e),
     }
 }

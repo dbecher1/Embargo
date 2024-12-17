@@ -1,8 +1,6 @@
 use std::{error::Error, fmt::Display, io};
 
-use serde::de;
-
-pub type EmbargoResult = Result<String, EmbargoError>;
+pub type EmbargoResult = Result<Option<String>, EmbargoError>;
 
 /// Embargo should always fail gracefully. Errors should simply be reported to the console before termination of the program; thus the only error behavior we are concerned about is the error message
 #[derive(Clone, Debug)]

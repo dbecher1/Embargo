@@ -156,8 +156,8 @@ pub fn create_project(args: Option<NewArgs>) -> EmbargoResult {
     }
 
     return if is_init_cmd {
-        Ok("Successfully initialized new project".to_owned())
+        Ok(Some("Successfully initialized new project".to_owned()))
     } else {
-        Ok("Successfully created new project".to_owned())
+        Ok(Some("Successfully created new project".to_owned()))
     }
 }

@@ -1,9 +1,9 @@
-use std::{cell::{RefCell, RefMut}, collections::hash_map::{Iter, IterMut}, path::{Path, PathBuf}};
+use std::{cell::RefCell, path::PathBuf};
 
 use ahash::AHashMap;
 use serde::{Deserialize, Serialize};
 
-use super::cxx_file::{CxxFile, ObjectFile};
+use super::cxx_file::CxxFile;
 
 
 /// Struct representing the Embargo.build file that goes inside every build folder

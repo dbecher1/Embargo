@@ -5,9 +5,10 @@ use serde::Deserialize;
 
 use crate::{embargo_toml::const_values::GLOBAL_FILE_NAME, error::EmbargoError};
 
-use super::const_values::{DEFAULT_COMPILER, ENV_VAR_NAME};
+use super::const_values::ENV_VAR_NAME;
 
 
+#[allow(unused)]
 #[derive(Deserialize, Debug)]
 pub struct GlobalEmbargoFile {
     use_git: bool,
