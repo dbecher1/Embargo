@@ -21,3 +21,6 @@ build_path = "build"
 
 # Where the executable is saved, relative to build path
 bin_path = "bin"
+
+# Where the .o files are saved, relative to build path
+object_path = "objects"

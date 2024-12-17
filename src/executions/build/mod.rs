@@ -4,16 +4,14 @@ use cxx_file::{CxxFile, CxxFileType};
 use log::debug;
 use walkdir::{DirEntry, WalkDir};
 
-use crate::{commands::BuildArgs, embargo_toml::{const_values::{DEFAULT_BIN_PATH, DEFAULT_BUILD_PATH, DEFAULT_OBJECT_PATH, DEFAULT_SRC_PATH}, EmbargoFile, GlobalEmbargoFile}, error::{EmbargoError, EmbargoResult}};
+use crate::{commands::BuildArgs, embargo_toml::{EmbargoFile, GlobalEmbargoFile}, error::{EmbargoError, EmbargoResult}};
 
 mod cxx_file;
 mod build_file;
+mod serde_helpers;
 
 #[allow(unused_variables)]
 pub fn build_project(args: BuildArgs, global_file: &GlobalEmbargoFile, embargo_toml: &EmbargoFile) -> EmbargoResult {
-
-    // TODO: for right now building will only work when ran in the same directory as the Embargo.toml file
-    // I'd like to see if I can make it work within a child directory
 
     let mut cwd = env::current_dir()?;
 
@@ -29,7 +27,7 @@ pub fn build_project(args: BuildArgs, global_file: &GlobalEmbargoFile, embargo_t
     if let Some(src_dir_override) = &embargo_toml.package.source_path {
         src_dir.push(src_dir_override);
     } else {
-        src_dir.push(DEFAULT_SRC_PATH);
+        src_dir.push(&global_file.source_path);
     }
 
     let mut buildfile_path = cwd.clone();
@@ -37,7 +35,7 @@ pub fn build_project(args: BuildArgs, global_file: &GlobalEmbargoFile, embargo_t
     if let Some(build_path_override) = &embargo_toml.package.build_path {
         buildfile_path.push(build_path_override);
     } else {
-        buildfile_path.push(DEFAULT_BUILD_PATH);
+        buildfile_path.push(&global_file.build_path);
     }
 
     // Create the build file path if it doesn't exist
@@ -63,6 +61,21 @@ pub fn build_project(args: BuildArgs, global_file: &GlobalEmbargoFile, embargo_t
     // Whereas the file we read from above would represent the previous build
     let mut new_embargo_build = EmbargoBuildFile::new();
 
+    // We want to recompile if Embargo.toml was modified, even if the source files werent
+    let embargo_toml_modified = if let Some(ref embargo_build) = embargo_build {
+        let h = hash_helper(embargo_toml);
+        // set the new file while we have this value
+        new_embargo_build.embargo_toml_modified = h;
+
+        if h != embargo_build.embargo_toml_modified {
+            true
+        } else {
+            false
+        }
+    } else {
+        false
+    };
+    
     for entry in WalkDir::new(src_dir.clone())
         .into_iter()
         .filter_map(|e| e.ok())
@@ -76,7 +89,7 @@ pub fn build_project(args: BuildArgs, global_file: &GlobalEmbargoFile, embargo_t
 
             let ext = path.extension().unwrap_or_default();
             
-            let hash = hash_systime(mod_time);
+            let hash = hash_helper(mod_time);
 
             let file_type = if is_source(ext) {
                 CxxFileType::Source
@@ -174,7 +187,7 @@ pub fn build_project(args: BuildArgs, global_file: &GlobalEmbargoFile, embargo_t
         if let Some(op) = &embargo_toml.package.object_path {
             object_path.push(op);
         } else {
-            object_path.push(DEFAULT_OBJECT_PATH);
+            object_path.push(&global_file.object_path);
         }
         let _ = fs::create_dir_all(&object_path);
 
@@ -184,16 +197,18 @@ pub fn build_project(args: BuildArgs, global_file: &GlobalEmbargoFile, embargo_t
         if let Some(bp) = &embargo_toml.package.bin_path {
             bin_path.push(bp);
         } else {
-            bin_path.push(DEFAULT_BIN_PATH);
+            bin_path.push(&global_file.bin_path);
         }
         let _ = fs::create_dir_all(&bin_path);
         bin_path.push(&embargo_toml.package.name);
 
-        // Compile!
-
         for (path, _) in new_embargo_build.source_files
             .iter()
-            .filter(|(p, f)| (f.borrow().changed() || fresh_build) && is_source(p.extension().unwrap_or_default()))
+            .filter(|(p, f)| (
+                    f.borrow().changed() ||
+                    fresh_build ||
+                    embargo_toml_modified
+                ) && is_source(p.extension().unwrap_or_default()))
             {
                 let mut object_path = object_path.clone();
                 
@@ -227,9 +242,12 @@ pub fn build_project(args: BuildArgs, global_file: &GlobalEmbargoFile, embargo_t
                     }
                 }
             }
-        if !files_changed {
+        
+        if !files_changed && !embargo_toml_modified {
             return Ok(Some("No changed files detected.".to_owned()))
         }
+            // Compile!
+        println!("{:?}", new_embargo_build);
         debug!("Linking object files...");
 
         let objects = WalkDir::new(object_path)
@@ -258,13 +276,15 @@ pub fn build_project(args: BuildArgs, global_file: &GlobalEmbargoFile, embargo_t
                 return Err(EmbargoError::new("error linking executable"))
             }
         }
-
+       
         // Save the new file!
 
         let new_buildfile = match File::create(buildfile_path.clone()) {
             Ok(bf) => Some(bf),
             Err(_) => None,
         };
+        
+
 
         let new_str = toml::to_string_pretty(&new_embargo_build)?;
         if let Some(mut file) = new_buildfile {
@@ -274,9 +294,9 @@ pub fn build_project(args: BuildArgs, global_file: &GlobalEmbargoFile, embargo_t
     Ok(Some(String::from("Successfully compiled project.")))
 }
 
-fn hash_systime(time: SystemTime) -> u64 {
+fn hash_helper<T: Hash>(t: T) -> u64 {
     let mut hasher = DefaultHasher::new();
-    time.hash(&mut hasher);
+    t.hash(&mut hasher);
     hasher.finish()
 }
 

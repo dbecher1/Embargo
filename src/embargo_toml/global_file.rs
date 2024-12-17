@@ -18,6 +18,7 @@ pub struct GlobalEmbargoFile {
     pub source_path: String,
     pub build_path: String,
     pub bin_path: String,
+    pub object_path: String,
 }
 
 impl GlobalEmbargoFile {

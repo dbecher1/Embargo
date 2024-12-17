@@ -6,6 +6,8 @@ use serde::{Serialize, Deserialize};
 mod package;
 mod dependencies;
 mod global_file;
+
+#[allow(unused)]
 pub mod const_values;
 
 use package::EmbargoPackageConfig;
@@ -15,7 +17,7 @@ pub use global_file::GlobalEmbargoFile;
 use crate::error::EmbargoError;
 
 /// The struct representing the Embargo.toml in every Embargo project.
-#[derive(Serialize, Deserialize, Debug, Default)]
+#[derive(Serialize, Deserialize, Debug, Default, Hash)]
 pub struct EmbargoFile {
     pub package: EmbargoPackageConfig,
     pub dependencies: Option<EmbargoDependenciesConfig>,
