@@ -24,9 +24,9 @@ where
         fn visit_str<E>(self, value: &str) -> Result<Self::Value, E>
         where 
             E: de::Error {
-                return match u64::from_str_radix(value, 16) {
+                match u64::from_str_radix(value, 16) {
                     Ok(n) => Ok(n),
-                    Err(_) => Err(E::custom(format!("Input must be a hex string!")))
+                    Err(_) => Err(E::custom("Input must be a hex string!".to_string()))
                 }
                 
             }

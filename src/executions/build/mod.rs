@@ -81,11 +81,7 @@ pub fn build_project(args: BuildArgs, global_file: &GlobalEmbargoFile, embargo_t
         // set the new file while we have this value
         new_embargo_build.embargo_toml_modified = h;
 
-        if h != embargo_build.embargo_toml_modified {
-            true
-        } else {
-            false
-        }
+        h != embargo_build.embargo_toml_modified
     } else {
         false
     };
@@ -264,7 +260,7 @@ pub fn build_project(args: BuildArgs, global_file: &GlobalEmbargoFile, embargo_t
         let objects = WalkDir::new(object_path)
             .into_iter()
             .filter_map(|e| e.ok())
-            .filter(|e| is_obj_file(e))
+            .filter(is_obj_file)
             .map(|e| e.path().as_os_str().to_str().unwrap_or_default().to_owned())
             .collect::<Vec<_>>();
 
@@ -297,7 +293,7 @@ pub fn build_project(args: BuildArgs, global_file: &GlobalEmbargoFile, embargo_t
         
         let new_str = toml::to_string_pretty(&new_embargo_build)?;
         if let Some(mut file) = new_buildfile {
-            file.write(new_str.as_bytes())?;
+            file.write_all(new_str.as_bytes())?;
         }
 
     let build_time = (now.elapsed().as_millis() as f32) / 1000.;

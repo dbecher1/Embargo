@@ -36,14 +36,14 @@ pub fn create_project(args: Option<NewArgs>) -> EmbargoResult {
         let mut src_dir = PathBuf::from(name);
         src_dir.push("src");
 
-        if let Err(_) = fs::create_dir_all(src_dir) {
+        if fs::create_dir_all(src_dir).is_err() {
             return Err(EmbargoError::new("a directory by this name may already exist."));
         }
 
         cwd.push(name);
         (name.to_owned(), Some(name.to_owned()), false)
     } else {
-        if let Err(_) = fs::create_dir("src") {
+        if fs::create_dir("src").is_err() {
             debug!("Directory src already exists. May want to flag this for an error in the future");
             // return Err(EmbargoError::new("could not create new directory."));
         }
@@ -155,7 +155,7 @@ pub fn create_project(args: Option<NewArgs>) -> EmbargoResult {
         Err(_) => return Err(EmbargoError::new("could not initialize git repository; ensure git is installed and try again.")),
     }
 
-    return if is_init_cmd {
+    if is_init_cmd {
         Ok(Some("Successfully initialized new project".to_owned()))
     } else {
         Ok(Some("Successfully created new project".to_owned()))

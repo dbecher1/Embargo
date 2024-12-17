@@ -57,7 +57,7 @@ fn real_main() -> EmbargoResult {
     let (embargo_toml, embargo_toml_path) = EmbargoFile::read_file().unwrap_or_default();
     debug!("Embargo.toml read: {:?}\nPath: {}", embargo_toml, embargo_toml_path.display());
 
-    return match args.command {
+    match args.command {
 
         Init => {
             debug!("Command executed: Init");

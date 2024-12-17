@@ -19,14 +19,14 @@ pub fn run_project(run_args: RunArgs, global_file: &GlobalEmbargoFile, embargo_t
     
     // If overrides exist in the local Embargo.toml
     if let Some(build) = &embargo_toml.package.build_path {
-        exec_path.push(&build);
-        final_run_path.push(&build);
+        exec_path.push(build);
+        final_run_path.push(build);
     } else {
         exec_path.push(&global_file.build_path);
     }
 
     if let Some(bin) = &embargo_toml.package.bin_path {
-        exec_path.push(&bin);
+        exec_path.push(bin);
     } else {
         exec_path.push(&global_file.bin_path);
     }
