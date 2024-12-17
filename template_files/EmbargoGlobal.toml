@@ -9,3 +9,15 @@ cxx_version = "c++17"
 
 c_compiler = "gcc" # not yet implemented
 
+# Below are the default package paths
+# These can all be overridden in the local Embargo.toml or changed in this file
+# But regardless, these values still need to be set or else Embargo will not run
+
+# Relative to Embargo.toml
+source_path = "src"
+
+# Relative to Embargo.toml
+build_path = "build"
+
+# Where the executable is saved, relative to build path
+bin_path = "bin"

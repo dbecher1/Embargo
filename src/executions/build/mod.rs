@@ -10,7 +10,7 @@ mod cxx_file;
 mod build_file;
 
 #[allow(unused_variables)]
-pub fn build_project(args: BuildArgs, global_file: &GlobalEmbargoFile) -> EmbargoResult {
+pub fn build_project(args: BuildArgs, global_file: &GlobalEmbargoFile, embargo_toml: &EmbargoFile) -> EmbargoResult {
 
     // TODO: for right now building will only work when ran in the same directory as the Embargo.toml file
     // I'd like to see if I can make it work within a child directory
@@ -23,20 +23,10 @@ pub fn build_project(args: BuildArgs, global_file: &GlobalEmbargoFile) -> Embarg
 
     debug!("{}", cwd.display());
 
-    let embargo_toml: EmbargoFile = {
-        let mut path = cwd.clone();
-        path.push("Embargo.toml");
-
-        let file = fs::read_to_string(path)?;
-        toml::from_str(&file)?
-    };
-
-    debug!("Loaded Embargo.toml: {:?}", embargo_toml);
-
     // Check to see if there are overridden values in the Embargo.toml file
     let mut src_dir = cwd.clone();
 
-    if let Some(src_dir_override) = embargo_toml.package.source_path {
+    if let Some(src_dir_override) = &embargo_toml.package.source_path {
         src_dir.push(src_dir_override);
     } else {
         src_dir.push(DEFAULT_SRC_PATH);
@@ -44,7 +34,7 @@ pub fn build_project(args: BuildArgs, global_file: &GlobalEmbargoFile) -> Embarg
 
     let mut buildfile_path = cwd.clone();
 
-    if let Some(build_path_override) = embargo_toml.package.build_path {
+    if let Some(build_path_override) = &embargo_toml.package.build_path {
         buildfile_path.push(build_path_override);
     } else {
         buildfile_path.push(DEFAULT_BUILD_PATH);
@@ -181,7 +171,7 @@ pub fn build_project(args: BuildArgs, global_file: &GlobalEmbargoFile) -> Embarg
         object_path.pop();
 
         // set overrides if they exist
-        if let Some(op) = embargo_toml.package.object_path {
+        if let Some(op) = &embargo_toml.package.object_path {
             object_path.push(op);
         } else {
             object_path.push(DEFAULT_OBJECT_PATH);
@@ -191,13 +181,13 @@ pub fn build_project(args: BuildArgs, global_file: &GlobalEmbargoFile) -> Embarg
         let mut bin_path = buildfile_path.clone();
         bin_path.pop();
 
-        if let Some(bp) = embargo_toml.package.bin_path {
+        if let Some(bp) = &embargo_toml.package.bin_path {
             bin_path.push(bp);
         } else {
             bin_path.push(DEFAULT_BIN_PATH);
         }
         let _ = fs::create_dir_all(&bin_path);
-        bin_path.push(embargo_toml.package.name);
+        bin_path.push(&embargo_toml.package.name);
 
         // Compile!
 

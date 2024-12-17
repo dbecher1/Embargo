@@ -13,6 +13,10 @@ pub struct EmbargoPackageConfig {
     pub object_path: Option<String>, // directory for .o files
     pub bin_path: Option<String>, // Relative to build path
     pub flags: Option<Vec<String>>, // Compiler flags
+
+    // args to pass to the process
+    // they are passed first, before any given args
+    pub args: Option<Vec<String>>,  
 }
 
 impl EmbargoPackageConfig {
@@ -36,6 +40,7 @@ impl Default for EmbargoPackageConfig {
             object_path: None,
             bin_path: None,
             flags: None,
+            args: None,
         }
     }
 }

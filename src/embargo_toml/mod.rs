@@ -23,12 +23,13 @@ pub struct EmbargoFile {
 
 impl EmbargoFile {
 
-    pub fn read_file() -> Result<Self, EmbargoError> {
+    /// If the file is found, returns a tuple of the file struct and the path where the file was located
+    pub fn read_file() -> Result<(Self, PathBuf), EmbargoError> {
 
         let mut cwd = env::current_dir()?;
 
         if cfg!(debug_assertions) {
-            cwd.push(".test_build");
+            cwd.push(".test_build/src/test");
         }
 
         let path = match find_embargo_file_path(&cwd) {
@@ -38,8 +39,8 @@ impl EmbargoFile {
             }
         };
 
-        let file = fs::read_to_string(path)?;
-        Ok(toml::from_str(&file)?)
+        let file = fs::read_to_string(&path)?;
+        Ok((toml::from_str(&file)?, path))
     }
    
 }

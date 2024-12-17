@@ -48,8 +48,8 @@ fn real_main() -> EmbargoResult {
    
     let global_file = GlobalEmbargoFile::try_read()?;
 
-    let embargo_toml = EmbargoFile::read_file()?;
-    println!("{:?}", embargo_toml);
+    let (embargo_toml, embargo_toml_path) = EmbargoFile::read_file()?;
+    debug!("Embargo.toml read: {:?}\nPath: {}", embargo_toml, embargo_toml_path.display());
 
     return match args.command {
 
@@ -66,12 +66,12 @@ fn real_main() -> EmbargoResult {
 
         Build(build_args) => {
             debug!("Command executed: Build");
-            executions::build_project(build_args, &global_file)
+            executions::build_project(build_args, &global_file, &embargo_toml)
         },
         
         Run(run_args) => {
             debug!("Command executed: Run");
-            executions::run_project(run_args, &global_file)
+            executions::run_project(run_args, &global_file, &embargo_toml, &embargo_toml_path)
         }
         _ => unimplemented!(),
     }
