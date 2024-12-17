@@ -3,7 +3,7 @@ use std::{cell::RefCell, env, ffi::OsStr, fs::{self, File}, hash::{DefaultHasher
 use ahash::AHashSet;
 use build_file::EmbargoBuildFile;
 use cxx_file::{CxxFile, CxxFileType};
-use log::debug;
+use log::{debug, log_enabled, LevelFilter};
 use walkdir::{DirEntry, WalkDir};
 
 use crate::{embargo_toml::{const_values::{DEFAULT_BIN_PATH, DEFAULT_BUILD_PATH, DEFAULT_OBJECT_PATH, DEFAULT_SRC_PATH}, EmbargoFile, GlobalEmbargoFile}, error::{EmbargoError, EmbargoResult}};
@@ -13,7 +13,7 @@ mod build_file;
 
 pub struct BuildFlags; // TODO - placeholder
 
-pub fn build_project(flags: Option<BuildFlags>) -> EmbargoResult {
+pub fn build_project(flags: BuildFlags) -> EmbargoResult {
 
     let global_file = GlobalEmbargoFile::try_read()?;
 
@@ -215,7 +215,7 @@ pub fn build_project(flags: Option<BuildFlags>) -> EmbargoResult {
                 let mut object_path = object_path.clone();
                 
                 // TODO: get compiler from file
-                let mut command = Command::new("g++");
+                let mut command = Command::new(global_file.cxx_compiler());
 
                 let mut args = Vec::new();
                 args.push("-c");
@@ -228,6 +228,8 @@ pub fn build_project(flags: Option<BuildFlags>) -> EmbargoResult {
                 object_path.push(filename_o);
                 
                 args.push(object_path.to_str().unwrap_or_default());
+
+                debug!("{} {}", global_file.cxx_compiler(), args.iter().fold(String::new(), |s, a| s + " " + a));
 
                 match command.args(args).output() {
                     Ok(output) => {
@@ -263,7 +265,7 @@ pub fn build_project(flags: Option<BuildFlags>) -> EmbargoResult {
             args.push(o);
         }
 
-        match Command::new("g++").args(args).output() {
+        match Command::new(global_file.cxx_compiler()).args(args).output() {
             Ok(output) => {
                 if !output.status.success() {
                     return Err(EmbargoError::new(&String::from_utf8_lossy(&output.stderr)));

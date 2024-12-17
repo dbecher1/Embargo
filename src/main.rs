@@ -1,5 +1,6 @@
 
 use clap::Parser;
+use executions::BuildFlags;
 use log::LevelFilter;
 use commands::Commands;
 
@@ -51,7 +52,8 @@ fn main() {
 
         Build => {
             debug!("Command executed: Build");
-            executions::build_project(None)
+            let b = BuildFlags{};
+            executions::build_project(b)
         },
         
         Run => {

@@ -17,6 +17,11 @@ pub struct GlobalEmbargoFile {
 }
 
 impl GlobalEmbargoFile {
+
+    pub fn cxx_compiler(&self) -> &str {
+        &self.cxx_compiler
+    }
+
     /// Attempts to read the global embargo file, located within the directory specified by the environment variable EMBARGO_HOME
     pub fn try_read() -> Result<Self, EmbargoError> {
 
