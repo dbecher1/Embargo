@@ -1,20 +1,19 @@
 use std::{env, fs, path::PathBuf};
 
-use log::debug;
+use log::{debug, error};
 use serde::Deserialize;
 
 use crate::{embargo_toml::const_values::GLOBAL_FILE_NAME, error::EmbargoError};
 
-use super::const_values::ENV_VAR_NAME;
+use super::{const_values::ENV_VAR_NAME, toolchain::Toolchain};
 
 
 #[allow(unused)]
 #[derive(Deserialize, Debug)]
 pub struct GlobalEmbargoFile {
     use_git: bool,
-    cxx_compiler: String,
+    toolchain: Toolchain,
     cxx_version: String,
-    c_compiler: String,
     pub source_path: String,
     pub build_path: String,
     pub bin_path: String,
@@ -23,8 +22,12 @@ pub struct GlobalEmbargoFile {
 
 impl GlobalEmbargoFile {
 
-    pub fn cxx_compiler(&self) -> &str {
-        &self.cxx_compiler
+    pub fn compiler(&self) -> &str {
+        &self.toolchain.compiler()
+    }
+
+    pub fn linker(&self) -> &str {
+        self.toolchain.linker()
     }
 
     /// Attempts to read the global embargo file, located within the directory specified by the environment variable EMBARGO_HOME
@@ -59,7 +62,8 @@ impl GlobalEmbargoFile {
 
                     match toml::from_str(&file_contents) {
                         Ok(toml) => toml,
-                        Err(_) => {
+                        Err(e) => {
+                            error!("{}", e);
                             return Err(EmbargoError::new("could not deserialize global config from TOML"));
                         }
                     }

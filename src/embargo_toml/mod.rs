@@ -6,6 +6,7 @@ use serde::{Serialize, Deserialize};
 mod package;
 mod dependencies;
 mod global_file;
+mod toolchain;
 
 #[allow(unused)]
 pub mod const_values;

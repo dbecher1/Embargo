@@ -4,10 +4,10 @@
 # if false, does not initialize a new git repository on project creation
 use_git = true
 
-cxx_compiler = "g++"
-cxx_version = "c++17"
+# only gcc is currently supported
+toolchain = "gcc"
 
-c_compiler = "gcc" # not yet implemented
+cxx_version = "c++17"
 
 # Below are the default package paths
 # These can all be overridden in the local Embargo.toml or changed in this file

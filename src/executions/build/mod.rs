@@ -10,7 +10,7 @@ use std::{
 };
 use build_file::EmbargoBuildFile;
 use cxx_file::{CxxFile, CxxFileType};
-use log::debug;
+use log::{debug, error};
 use topological_sort::TopologicalSort;
 use walkdir::{DirEntry, WalkDir};
 use crate::{
@@ -220,7 +220,7 @@ pub fn build_project(args: BuildArgs, global_file: &GlobalEmbargoFile, embargo_t
             {
                 let mut object_path = object_path.clone();
                 
-                let mut command = Command::new(global_file.cxx_compiler());
+                let mut command = Command::new(global_file.compiler());
 
                 let mut args = Vec::new();
                 args.push("-c");
@@ -235,7 +235,7 @@ pub fn build_project(args: BuildArgs, global_file: &GlobalEmbargoFile, embargo_t
                 
                 args.push(object_path.to_str().unwrap_or_default());
 
-                debug!("{} {}", global_file.cxx_compiler(), args.iter().fold(String::new(), |s, a| s + " " + a));
+                debug!("{} {}", global_file.compiler(), args.iter().fold(String::new(), |s, a| s + " " + a));
 
                 match command.args(args).output() {
                     Ok(output) => {
@@ -273,13 +273,14 @@ pub fn build_project(args: BuildArgs, global_file: &GlobalEmbargoFile, embargo_t
             args.push(o);
         }
 
-        match Command::new(global_file.cxx_compiler()).args(args).output() {
+        match Command::new(global_file.linker()).args(args).output() {
             Ok(output) => {
                 if !output.status.success() {
                     return Err(EmbargoError::new(&String::from_utf8_lossy(&output.stderr)));
                 } 
             },
-            Err(_) => {
+            Err(e) => {
+                error!("{}", e);
                 return Err(EmbargoError::new("error linking executable"))
             }
         }
