@@ -5,6 +5,8 @@
 use_git = true
 
 # only gcc is currently supported
+# goal is to support gcc, clang and mvsc on windows
+# with clang being the default 
 toolchain = "gcc"
 
 cxx_version = "c++17"

@@ -91,7 +91,7 @@ pub fn build_project(args: BuildArgs, global_file: &GlobalEmbargoFile, embargo_t
     // Whereas the file we read from above would represent the previous build
     let mut new_embargo_build = EmbargoBuildFile::new();
 
-    new_embargo_build.embargo_toml_modified = hash_helper(embargo_toml);;
+    new_embargo_build.embargo_toml_modified = hash_helper(embargo_toml);
 
     // We want to recompile if Embargo.toml was modified, even if the source files were not
     let embargo_toml_modified = if let Some(ref embargo_build) = embargo_build {

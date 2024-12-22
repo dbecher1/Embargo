@@ -1,5 +1,6 @@
 
 use clap::Parser;
+use colored::Colorize;
 use embargo_toml::{EmbargoFile, GlobalEmbargoFile};
 use error::EmbargoResult;
 use log::LevelFilter;
@@ -33,7 +34,7 @@ fn main() {
                 println!("{}", msg);
             }
         }
-        Err(e) => eprintln!("An error has occurred: {}", e),
+        Err(e) => eprintln!("{}: {}", "Error".red().bold(), e),
     }
 }
 

@@ -2,7 +2,9 @@ use std::{fs, path::Path};
 
 use crate::{commands::CleanArgs, embargo_toml::{EmbargoFile, GlobalEmbargoFile}, error::EmbargoResult};
 
+// Have to polish up error handling by quite a bit
 
+#[allow(unreachable_code)]
 pub fn clean_project(args: CleanArgs, global_file: &GlobalEmbargoFile, embargo_toml: &EmbargoFile, embargo_toml_path: &Path) -> EmbargoResult {
 
     let mut clean_path = embargo_toml_path.to_path_buf();
@@ -21,6 +23,7 @@ pub fn clean_project(args: CleanArgs, global_file: &GlobalEmbargoFile, embargo_t
         String::from("Successfully cleaned build directory.")
     } else {
         unimplemented!();
+        
         let mut message = String::new();
 
         // in lieu of a fallthrough, handle each case if the flag is set
