@@ -1,10 +1,11 @@
 
 use std::{path::{Path, PathBuf}, process::Command};
 
-use crate::{commands::RunArgs, embargo_toml::{EmbargoFile, GlobalEmbargoFile}, error::EmbargoResult};
+use colored::Colorize;
+
+use crate::{commands::{BuildProfile, RunArgs}, embargo_toml::{EmbargoFile, GlobalEmbargoFile}, error::EmbargoResult};
 
 use super::build_project;
-
 
 pub fn run_project(run_args: RunArgs, global_file: &GlobalEmbargoFile, embargo_toml: &EmbargoFile, embargo_toml_path: &Path) -> EmbargoResult {
 
@@ -12,7 +13,6 @@ pub fn run_project(run_args: RunArgs, global_file: &GlobalEmbargoFile, embargo_t
 
     // we have where Embargo.toml is, find the path to the executable
     let mut exec_path = embargo_toml_path.to_path_buf();
-    exec_path.pop(); // remove Embargo.toml from the path
 
     // for the displ
     let mut final_run_path = PathBuf::new();
@@ -25,11 +25,32 @@ pub fn run_project(run_args: RunArgs, global_file: &GlobalEmbargoFile, embargo_t
         exec_path.push(&global_file.build_path);
     }
 
-    if let Some(bin) = &embargo_toml.package.bin_path {
-        exec_path.push(bin);
+    match run_args.build_args.profile {
+        BuildProfile::Debug => {
+            if let Some(debug_override) = &embargo_toml.package.target_path_debug {
+                exec_path.push(debug_override);
+            } else {
+                exec_path.push(&global_file.target_path_debug);
+            }
+        },
+
+        BuildProfile::Release => {
+            if let Some(release_override) = &embargo_toml.package.target_path_release {
+                exec_path.push(release_override);
+            } else {
+                exec_path.push(&global_file.target_path_release);
+            }
+        }
+    }
+
+    if let Some(bin_override) = &embargo_toml.package.bin_path {
+        exec_path.push(bin_override);
     } else {
         exec_path.push(&global_file.bin_path);
     }
+
+    //if let Some(p) = &embargo_toml.package
+    
     // copy the cwd for the file before adding the filename
     let exec_cwd = exec_path.clone();
 
@@ -57,7 +78,7 @@ pub fn run_project(run_args: RunArgs, global_file: &GlobalEmbargoFile, embargo_t
             vec![]
         }
     };
-    println!("Running \"{}\"", exec_path.display());
+    println!("{} \"{}\"", "Running".green().bold(), exec_path.display());
 
     let mut run = Command::new(exec_path);
     let run = run

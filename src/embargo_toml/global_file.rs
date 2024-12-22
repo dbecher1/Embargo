@@ -16,8 +16,11 @@ pub struct GlobalEmbargoFile {
     cxx_version: String,
     pub source_path: String,
     pub build_path: String,
-    pub bin_path: String,
+    pub target_path_debug: String,
+    pub target_path_release: String,
     pub object_path: String,
+    pub bin_path: String,
+    pub lib_path: String,
 }
 
 impl GlobalEmbargoFile {

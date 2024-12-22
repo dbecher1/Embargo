@@ -1,19 +1,24 @@
-use clap::Args;
+use clap::{Args, ValueEnum};
 
+#[derive(Debug, Clone, Copy, ValueEnum)]
+pub enum Profile {
+    Debug,
+    Release
+}
 
 #[derive(Args, Clone, Copy, Debug)]
 pub struct BuildArgs {
-    /// Build args are not yet implemented
-    #[arg(short)]
-    todo: Option<bool>,
+    /// Optimization level of the build (not yet implemented)
+    #[arg(value_enum, default_value_t = Profile::Debug)]
+    pub profile: Profile,
 }
 
 impl Default for BuildArgs {
     fn default() -> Self {
-        let todo = None;
+        let profile = Profile::Debug;
 
         Self {
-            todo,
+            profile
         }
     }
 }

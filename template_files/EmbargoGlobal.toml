@@ -17,10 +17,15 @@ cxx_version = "c++17"
 source_path = "src"
 
 # Relative to Embargo.toml
-build_path = "build"
+build_path = "target"
 
-# Where the executable is saved, relative to build path
+# Where the builds are saved, relative to build path above
+target_path_debug = "debug"
+target_path_release = "release"
+
+# Where the .o files are saved, relative to target path
+object_path = ".artifacts"
+
+# Directory where the executable/library are saved, relative to target path
 bin_path = "bin"
-
-# Where the .o files are saved, relative to build path
-object_path = "objects"
+lib_path = "lib"

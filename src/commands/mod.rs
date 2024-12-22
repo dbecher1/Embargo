@@ -1,13 +1,15 @@
 
 use clap::Subcommand;
+pub use clean::CleanArgs;
 pub use new::NewArgs;
-pub use build::BuildArgs;
+pub use build::{BuildArgs, Profile as BuildProfile};
 pub use run::RunArgs;
 
 mod new;
 mod project_type;
 mod build;
 mod run;
+mod clean;
 
 #[derive(Subcommand, Debug)]
 pub enum Commands {
@@ -24,7 +26,10 @@ pub enum Commands {
     /// Compile and run an Embargo project.
     Run(RunArgs),
 
-    Install,
-    Uninstall,
-    Add,
+    /// Clean build artifacts (default behavior is clean entire build directory)
+    Clean(CleanArgs),
+
+    //Install,
+    //Uninstall,
+    //Add,
 }

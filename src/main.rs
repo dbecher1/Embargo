@@ -54,7 +54,8 @@ fn real_main() -> EmbargoResult {
    
     let global_file = GlobalEmbargoFile::try_read()?;
 
-    let (embargo_toml, embargo_toml_path) = EmbargoFile::read_file().unwrap_or_default();
+    let (embargo_toml, mut embargo_toml_path) = EmbargoFile::read_file().unwrap_or_default();
+    embargo_toml_path.pop(); // make it so the path doesn't include the file itself
     debug!("Embargo.toml read: {:?}\nPath: {}", embargo_toml, embargo_toml_path.display());
 
     match args.command {
@@ -78,7 +79,11 @@ fn real_main() -> EmbargoResult {
         Run(run_args) => {
             debug!("Command executed: Run");
             executions::run_project(run_args, &global_file, &embargo_toml, &embargo_toml_path)
-        }
-        _ => unimplemented!(),
+        },
+
+        Clean(clean_args) => {
+            debug!("Command executed: Clean");
+            executions::clean_project(clean_args, &global_file, &embargo_toml, &embargo_toml_path)
+        },
     }
 }
