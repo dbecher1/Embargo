@@ -57,7 +57,7 @@ fn real_main() -> EmbargoResult {
 
     let (embargo_toml, mut embargo_toml_path) = EmbargoFile::read_file().unwrap_or_default();
     embargo_toml_path.pop(); // make it so the path doesn't include the file itself
-    debug!("Embargo.toml read: {:?}\nPath: {}", embargo_toml, embargo_toml_path.display());
+    debug!("Embargo.toml read: {:?}\nPath: {:?}", embargo_toml, embargo_toml_path);
 
     match args.command {
 

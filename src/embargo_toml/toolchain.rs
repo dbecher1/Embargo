@@ -38,3 +38,9 @@ impl Toolchain {
         }
     }
 }
+
+impl Default for Toolchain {
+    fn default() -> Self {
+        Self::GCC
+    }
+}

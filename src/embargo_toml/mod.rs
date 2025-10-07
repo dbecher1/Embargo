@@ -29,11 +29,7 @@ impl EmbargoFile {
     /// If the file is found, returns a tuple of the file struct and the path where the file was located
     pub fn read_file() -> Result<(Self, PathBuf), EmbargoError> {
 
-        let mut cwd = env::current_dir()?;
-
-        if cfg!(debug_assertions) {
-            cwd.push(".test_build/src/test");
-        }
+        let cwd = env::current_dir()?;
 
         let path = match find_embargo_file_path(&cwd) {
             Some(p) => p,
