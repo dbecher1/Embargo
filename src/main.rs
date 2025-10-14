@@ -39,7 +39,7 @@ fn main() {
 }
 
 fn real_main() -> EmbargoResult {
-
+    
     use Commands::*;
 
     let args = Args::parse();
@@ -54,11 +54,10 @@ fn real_main() -> EmbargoResult {
     logger.init();
 
     let (embargo_toml, embargo_toml_path) = EmbargoFile::read_file()?;
-    // embargo_toml_path.pop(); // make it so the path doesn't include the file itself
+
     debug!("Embargo.toml read: {:?}\nPath: {:?}", embargo_toml, embargo_toml_path);
 
     match args.command {
-
         Init => {
             debug!("Command executed: Init");
             // Todo - probably want to make some init args, like project type etc

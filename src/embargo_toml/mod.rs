@@ -7,13 +7,14 @@ mod pkg_config;
 mod dependencies;
 mod global_config;
 mod toolchain;
+mod cfg_trait;
 
 #[allow(unused)]
 pub mod const_values;
 
+pub use cfg_trait::ConfigFile;
 use pkg_config::EmbargoPackageConfig;
 use dependencies::EmbargoDependenciesConfig;
-
 use crate::error::EmbargoError;
 
 /// The struct representing the Embargo.toml in every Embargo project.
@@ -36,12 +37,65 @@ impl EmbargoFile {
                 return Err(EmbargoError::new("Unable to locate Embargo.toml"));
             }
         };
-        path.pop(); // remove the file name
-
         let file = fs::read_to_string(&path)?;
+        path.pop(); // remove the file name
         Ok((toml::from_str(&file)?, path))
     }
    
+}
+
+impl<'a> ConfigFile<'a> for EmbargoFile {
+    fn compiler(&'a self) -> &'a str {
+        self.package.compiler()
+    }
+
+    fn linker(&'a self) -> &'a str {
+        self.package.linker()
+    }
+
+    fn source_path(&'a self) -> &'a str {
+        self.package.source_path()
+    }
+
+    fn build_path(&'a self) -> String {
+        self.package.build_path()
+    }
+
+    fn auto_clean(&'a self) -> bool {
+        self.package.auto_clean()
+    }
+
+    fn object_path(&'a self) -> String {
+        self.package.object_path()
+    }
+
+    fn target_path_debug(&'a self) -> String {
+        self.package.target_path_debug()
+    }
+
+    fn target_path_release(&'a self) -> String {
+        self.package.target_path_release()
+    }
+
+    fn bin_path(&'a self) -> String {
+        self.package.bin_path()
+    }
+
+    fn lib_path(&'a self) -> String {
+        self.package.lib_path()
+    }
+
+    fn flags(&'a self) -> Vec<String> {
+        self.package.flags()
+    }
+
+    fn args(&'a self) -> Vec<String> {
+        self.package.args()
+    }
+
+    fn author(&'a self) -> Option<&'a str> {
+        self.package.author()
+    }
 }
 
 /// Tries to find the Embargo.toml file

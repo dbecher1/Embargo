@@ -16,9 +16,10 @@ use topological_sort::TopologicalSort;
 use walkdir::{DirEntry, WalkDir};
 use crate::{
     commands::{BuildArgs, BuildProfile},
-    embargo_toml::EmbargoFile,
+    embargo_toml::*,
     error::{EmbargoError, EmbargoResult}
 };
+
 use rayon::prelude::*;
 
 mod cxx_file;
@@ -36,17 +37,17 @@ pub fn build_project(args: BuildArgs, embargo_toml: &EmbargoFile, embargo_toml_p
 
     // Check to see if there are overridden values in the Embargo.toml file
     let mut src_dir = cwd.clone();
-    src_dir.push(&embargo_toml.package.source_path());
+    src_dir.push(&embargo_toml.source_path());
 
     let mut buildfile_path = cwd.clone();
-    buildfile_path.push(&embargo_toml.package.build_path());
+    buildfile_path.push(&embargo_toml.build_path());
 
     match args.profile {
         BuildProfile::Debug => {
-            buildfile_path.push(&embargo_toml.package.target_path_debug());
+            buildfile_path.push(&embargo_toml.target_path_debug());
         },
         BuildProfile::Release => {
-            buildfile_path.push(&embargo_toml.package.target_path_release());
+            buildfile_path.push(&embargo_toml.target_path_release());
         },
     }
 
@@ -208,7 +209,7 @@ pub fn build_project(args: BuildArgs, embargo_toml: &EmbargoFile, embargo_toml_p
             */
             // set the artifact path from the build path and return it
             let mut object_path = bin_path.clone();
-            object_path.push(&embargo_toml.package.object_path());
+            object_path.push(&embargo_toml.object_path());
 
             object_path
         };
@@ -216,7 +217,7 @@ pub fn build_project(args: BuildArgs, embargo_toml: &EmbargoFile, embargo_toml_p
         let _ = fs::create_dir_all(&object_path)?;
 
         // TODO: this will have to be rearranged for when library stuff is supported
-        bin_path.push(embargo_toml.package.bin_path());
+        bin_path.push(embargo_toml.bin_path());
         
         let _ = fs::create_dir_all(&bin_path);
         bin_path.push(&embargo_toml.package.name);
@@ -235,7 +236,7 @@ pub fn build_project(args: BuildArgs, embargo_toml: &EmbargoFile, embargo_toml_p
             {
                 let mut object_path = object_path.clone();
                 
-                let mut command = Command::new(embargo_toml.package.compiler());
+                let mut command = Command::new(embargo_toml.compiler());
 
                 let mut args = Vec::new();
                 args.push("-c");
@@ -250,7 +251,7 @@ pub fn build_project(args: BuildArgs, embargo_toml: &EmbargoFile, embargo_toml_p
                 
                 args.push(object_path.to_str().unwrap_or_default());
 
-                debug!("{} {}", global_file.compiler(), args.iter().fold(String::new(), |s, a| s + " " + a));
+                debug!("{} {}", embargo_toml.compiler(), args.iter().fold(String::new(), |s, a| s + " " + a));
 
                 match command.args(args).output() {
                     Ok(output) => {
@@ -289,7 +290,7 @@ pub fn build_project(args: BuildArgs, embargo_toml: &EmbargoFile, embargo_toml_p
             args.push(o);
         }
 
-        match Command::new(global_file.linker()).args(args).output() {
+        match Command::new(embargo_toml.linker()).args(args).output() {
             Ok(output) => {
                 if !output.status.success() {
                     return Err(EmbargoError::new(&String::from_utf8_lossy(&output.stderr)));

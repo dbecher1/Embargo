@@ -48,7 +48,7 @@ pub struct EmbargoGlobalConfig {
     use_git: bool,
 
     #[serde(default)]
-    pub(crate) toolchain: Toolchain,
+    toolchain: Toolchain,
 
     #[serde(default = "cxx_default")]
     cxx_version: String,

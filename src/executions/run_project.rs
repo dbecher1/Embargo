@@ -3,13 +3,13 @@ use std::{path::{Path, PathBuf}, process::Command};
 
 use colored::Colorize;
 
-use crate::{commands::{BuildProfile, RunArgs}, embargo_toml::EmbargoFile, error::EmbargoResult};
+use crate::{commands::{BuildProfile, RunArgs}, embargo_toml::{ConfigFile, EmbargoFile}, error::EmbargoResult};
 
 use super::build_project;
 
 pub fn run_project(run_args: RunArgs, embargo_toml: &EmbargoFile, embargo_toml_path: &Path) -> EmbargoResult {
 
-    build_project(run_args.build_args, global_file, embargo_toml, embargo_toml_path)?;
+    build_project(run_args.build_args, embargo_toml, embargo_toml_path)?;
 
     // we have where Embargo.toml is, find the path to the executable
     let mut exec_path = embargo_toml_path.to_path_buf();
@@ -17,37 +17,19 @@ pub fn run_project(run_args: RunArgs, embargo_toml: &EmbargoFile, embargo_toml_p
     // for the displ
     let mut final_run_path = PathBuf::new();
     
-    // If overrides exist in the local Embargo.toml
-    if let Some(build) = &embargo_toml.package.build_path {
-        exec_path.push(build);
-        final_run_path.push(build);
-    } else {
-        exec_path.push(&global_file.build_path);
-    }
+    exec_path.push(embargo_toml.build_path());
+    final_run_path.push(embargo_toml.build_path());
 
     match run_args.build_args.profile {
         BuildProfile::Debug => {
-            if let Some(debug_override) = &embargo_toml.package.target_path_debug {
-                exec_path.push(debug_override);
-            } else {
-                exec_path.push(&global_file.target_path_debug);
-            }
+            exec_path.push(embargo_toml.target_path_debug());
         },
 
         BuildProfile::Release => {
-            if let Some(release_override) = &embargo_toml.package.target_path_release {
-                exec_path.push(release_override);
-            } else {
-                exec_path.push(&global_file.target_path_release);
-            }
+            exec_path.push(embargo_toml.target_path_release());
         }
     }
-
-    if let Some(bin_override) = &embargo_toml.package.bin_path {
-        exec_path.push(bin_override);
-    } else {
-        exec_path.push(&global_file.bin_path);
-    }
+    exec_path.push(embargo_toml.bin_path());
 
     //if let Some(p) = &embargo_toml.package
     
@@ -58,7 +40,10 @@ pub fn run_project(run_args: RunArgs, embargo_toml: &EmbargoFile, embargo_toml_p
     exec_path.push(&embargo_toml.package.name);
 
     // if args are provided in Embargo.toml, add them first before the passed args
-    let args = if let Some(toml_args) = &embargo_toml.package.args {
+    // FIXME
+    let args: Vec<&str> = vec![];
+    /*
+    let args = if let Some(toml_args) = &embargo_toml.args() {
         // if args were passed, do the above
         if !run_args.args.is_empty() {
             // have to clone these to make them owned, not super ideal but eh
@@ -78,6 +63,7 @@ pub fn run_project(run_args: RunArgs, embargo_toml: &EmbargoFile, embargo_toml_p
             vec![]
         }
     };
+     */
     println!("{} \"{}\"", "Running".green().bold(), exec_path.display());
 
     let mut run = Command::new(exec_path);
