@@ -3,8 +3,7 @@ use std::{env, fs, path::PathBuf};
 use log::{debug, error};
 use serde::Deserialize;
 
-use crate::{embargo_toml::const_values::GLOBAL_FILE_NAME, error::EmbargoError};
-
+use crate::embargo_toml::const_values::GLOBAL_FILE_NAME;
 use super::{const_values::ENV_VAR_NAME, toolchain::Toolchain};
 
 fn git_default() -> bool {
@@ -43,14 +42,13 @@ fn lib_default() -> String {
     "lib".to_owned()
 }
 
-#[allow(unused)]
-#[derive(Deserialize, Debug)]
-pub struct GlobalEmbargoFile {
+#[derive(Deserialize, Debug, Hash)]
+pub struct EmbargoGlobalConfig {
     #[serde(default = "git_default")]
     use_git: bool,
 
     #[serde(default)]
-    toolchain: Toolchain,
+    pub(crate) toolchain: Toolchain,
 
     #[serde(default = "cxx_default")]
     cxx_version: String,
@@ -77,7 +75,7 @@ pub struct GlobalEmbargoFile {
     pub lib_path: String,
 }
 
-impl Default for GlobalEmbargoFile {
+impl Default for EmbargoGlobalConfig {
     fn default() -> Self {
         Self {
             use_git: git_default(),
@@ -94,7 +92,7 @@ impl Default for GlobalEmbargoFile {
     }
 }
 
-impl GlobalEmbargoFile {
+impl EmbargoGlobalConfig {
 
     pub fn compiler(&self) -> &str {
         &self.toolchain.compiler()
@@ -109,14 +107,14 @@ impl GlobalEmbargoFile {
     /// located in a default expected path by OS (TODO), OR
     /// located within the directory specified by the environment variable EMBARGO_HOME
     /// If the file is not found, Embargo will use default values
-    pub fn try_read() -> Result<Self, EmbargoError> {
+    pub fn try_read() -> Self{
 
         // If in debug mode, try toread the global file from the local one
         let embargo_home = match env::var(ENV_VAR_NAME) {
             Ok(env) => env,
             Err(_) => {
                 debug!("EMBARGO_HOME environment variable is not set; using default parameters");
-                return Ok(Self::default())
+                return Self::default()
             }
         };
 
@@ -139,16 +137,17 @@ impl GlobalEmbargoFile {
                         Ok(toml) => toml,
                         Err(e) => {
                             error!("{}", e);
-                            return Err(EmbargoError::new("Error reading Embargo global file - bad field indicated"));
+                            error!("Error reading Embargo global file - bad field indicated\nUsing default config values");
+                            return Self::default()
                         }
                     }
                 },
                 Err(_) => {
-                    return Ok(Self::default())
+                    return Self::default()
                 },
             }
         };
         debug!("Successfully read {}", GLOBAL_FILE_NAME);
-        Ok(file)
+        file
     }
 }

@@ -16,7 +16,7 @@ use topological_sort::TopologicalSort;
 use walkdir::{DirEntry, WalkDir};
 use crate::{
     commands::{BuildArgs, BuildProfile},
-    embargo_toml::{EmbargoFile, GlobalEmbargoFile},
+    embargo_toml::EmbargoFile,
     error::{EmbargoError, EmbargoResult}
 };
 use rayon::prelude::*;
@@ -26,7 +26,7 @@ mod build_file;
 mod serde_helpers;
 
 #[allow(unused_variables)]
-pub fn build_project(args: BuildArgs, global_file: &GlobalEmbargoFile, embargo_toml: &EmbargoFile, embargo_toml_path: &Path) -> EmbargoResult {
+pub fn build_project(args: BuildArgs, embargo_toml: &EmbargoFile, embargo_toml_path: &Path) -> EmbargoResult {
 
     let now = Instant::now();
     
@@ -36,35 +36,17 @@ pub fn build_project(args: BuildArgs, global_file: &GlobalEmbargoFile, embargo_t
 
     // Check to see if there are overridden values in the Embargo.toml file
     let mut src_dir = cwd.clone();
-
-    if let Some(src_dir_override) = &embargo_toml.package.source_path {
-        src_dir.push(src_dir_override);
-    } else {
-        src_dir.push(&global_file.source_path);
-    }
+    src_dir.push(&embargo_toml.package.source_path());
 
     let mut buildfile_path = cwd.clone();
-
-    if let Some(build_path_override) = &embargo_toml.package.build_path {
-        buildfile_path.push(build_path_override);
-    } else {
-        buildfile_path.push(&global_file.build_path);
-    }
+    buildfile_path.push(&embargo_toml.package.build_path());
 
     match args.profile {
         BuildProfile::Debug => {
-            if let Some(target_path_override) = &embargo_toml.package.target_path_debug {
-                buildfile_path.push(target_path_override);
-            } else {
-                buildfile_path.push(&global_file.target_path_debug);
-            }
+            buildfile_path.push(&embargo_toml.package.target_path_debug());
         },
         BuildProfile::Release => {
-            if let Some(target_path_override) = &embargo_toml.package.target_path_release {
-                buildfile_path.push(target_path_override);
-            } else {
-                buildfile_path.push(&global_file.target_path_release);
-            }
+            buildfile_path.push(&embargo_toml.package.target_path_release());
         },
     }
 
@@ -226,24 +208,15 @@ pub fn build_project(args: BuildArgs, global_file: &GlobalEmbargoFile, embargo_t
             */
             // set the artifact path from the build path and return it
             let mut object_path = bin_path.clone();
+            object_path.push(&embargo_toml.package.object_path());
 
-            if let Some(op) = &embargo_toml.package.object_path {
-                object_path.push(op);
-            } else {
-                object_path.push(&global_file.object_path);
-            }
             object_path
         };
         // assignment so if an error happens it's not propigated
         let _ = fs::create_dir_all(&object_path)?;
 
         // TODO: this will have to be rearranged for when library stuff is supported
-
-        if let Some(p) = &embargo_toml.package.bin_path {
-            bin_path.push(p);
-        } else {
-            bin_path.push(&global_file.bin_path);
-        }
+        bin_path.push(embargo_toml.package.bin_path());
         
         let _ = fs::create_dir_all(&bin_path);
         bin_path.push(&embargo_toml.package.name);
@@ -262,7 +235,7 @@ pub fn build_project(args: BuildArgs, global_file: &GlobalEmbargoFile, embargo_t
             {
                 let mut object_path = object_path.clone();
                 
-                let mut command = Command::new(global_file.compiler());
+                let mut command = Command::new(embargo_toml.package.compiler());
 
                 let mut args = Vec::new();
                 args.push("-c");

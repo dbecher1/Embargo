@@ -3,17 +3,16 @@ use std::{env, fs, path::{Path, PathBuf}};
 
 use serde::{Serialize, Deserialize};
 
-mod package;
+mod pkg_config;
 mod dependencies;
-mod global_file;
+mod global_config;
 mod toolchain;
 
 #[allow(unused)]
 pub mod const_values;
 
-use package::EmbargoPackageConfig;
+use pkg_config::EmbargoPackageConfig;
 use dependencies::EmbargoDependenciesConfig;
-pub use global_file::GlobalEmbargoFile;
 
 use crate::error::EmbargoError;
 
@@ -31,12 +30,13 @@ impl EmbargoFile {
 
         let cwd = env::current_dir()?;
 
-        let path = match find_embargo_file_path(&cwd) {
+        let mut path = match find_embargo_file_path(&cwd) {
             Some(p) => p,
             None => {
                 return Err(EmbargoError::new("Unable to locate Embargo.toml"));
             }
         };
+        path.pop(); // remove the file name
 
         let file = fs::read_to_string(&path)?;
         Ok((toml::from_str(&file)?, path))

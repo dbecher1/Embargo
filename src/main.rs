@@ -1,7 +1,7 @@
 
 use clap::Parser;
 use colored::Colorize;
-use embargo_toml::{EmbargoFile, GlobalEmbargoFile};
+use embargo_toml::EmbargoFile;
 use error::EmbargoResult;
 use log::LevelFilter;
 use commands::Commands;
@@ -52,11 +52,9 @@ fn real_main() -> EmbargoResult {
         logger.filter_level(LOG_LEVEL_RELEASE);
     }
     logger.init();
-   
-    let global_file = GlobalEmbargoFile::try_read()?;
 
-    let (embargo_toml, mut embargo_toml_path) = EmbargoFile::read_file().unwrap_or_default();
-    embargo_toml_path.pop(); // make it so the path doesn't include the file itself
+    let (embargo_toml, embargo_toml_path) = EmbargoFile::read_file()?;
+    // embargo_toml_path.pop(); // make it so the path doesn't include the file itself
     debug!("Embargo.toml read: {:?}\nPath: {:?}", embargo_toml, embargo_toml_path);
 
     match args.command {
@@ -74,17 +72,17 @@ fn real_main() -> EmbargoResult {
 
         Build(build_args) => {
             debug!("Command executed: Build");
-            executions::build_project(build_args, &global_file, &embargo_toml, &embargo_toml_path)
+            executions::build_project(build_args, &embargo_toml, &embargo_toml_path)
         },
         
         Run(run_args) => {
             debug!("Command executed: Run");
-            executions::run_project(run_args, &global_file, &embargo_toml, &embargo_toml_path)
+            executions::run_project(run_args, &embargo_toml, &embargo_toml_path)
         },
 
         Clean(clean_args) => {
             debug!("Command executed: Clean");
-            executions::clean_project(clean_args, &global_file, &embargo_toml, &embargo_toml_path)
+            executions::clean_project(clean_args, &embargo_toml, &embargo_toml_path)
         },
     }
 }

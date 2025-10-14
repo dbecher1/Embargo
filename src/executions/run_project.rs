@@ -3,11 +3,11 @@ use std::{path::{Path, PathBuf}, process::Command};
 
 use colored::Colorize;
 
-use crate::{commands::{BuildProfile, RunArgs}, embargo_toml::{EmbargoFile, GlobalEmbargoFile}, error::EmbargoResult};
+use crate::{commands::{BuildProfile, RunArgs}, embargo_toml::EmbargoFile, error::EmbargoResult};
 
 use super::build_project;
 
-pub fn run_project(run_args: RunArgs, global_file: &GlobalEmbargoFile, embargo_toml: &EmbargoFile, embargo_toml_path: &Path) -> EmbargoResult {
+pub fn run_project(run_args: RunArgs, embargo_toml: &EmbargoFile, embargo_toml_path: &Path) -> EmbargoResult {
 
     build_project(run_args.build_args, global_file, embargo_toml, embargo_toml_path)?;
 
