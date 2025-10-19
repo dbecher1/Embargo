@@ -1,6 +1,5 @@
 
 use std::{env, fs, path::{Path, PathBuf}};
-
 use serde::{Serialize, Deserialize};
 
 mod pkg_config;
@@ -27,9 +26,20 @@ pub struct EmbargoFile {
 impl EmbargoFile {
 
     /// If the file is found, returns a tuple of the file struct and the path where the file was located
-    pub fn read_file() -> Result<(Self, PathBuf), EmbargoError> {
+    /// Param dir will be Some if this is a test; in that instance, it will be the path of the Temp dir
+    /// Otherwise the cwd will be used
+    pub fn read_file(dir: Option<&Path>) -> Result<(Self, PathBuf), EmbargoError> {
 
-        let cwd = env::current_dir()?;
+        // Use the cwd in normal runs
+        // If this is a test, create a temp dir and
+        let cwd = if let Some(d) = dir {
+            let file = Self::default();
+            let mut path = d.to_owned();
+            path.push("Embargo.toml");
+            return Ok((file, path));
+        } else {
+            env::current_dir()?
+        };
 
         let mut path = match find_embargo_file_path(&cwd) {
             Some(p) => p,

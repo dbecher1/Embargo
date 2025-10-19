@@ -1,5 +1,5 @@
 use crate::{
-    commands::NewArgs,
+    cli::NewArgs,
     embargo_toml::EmbargoFile,
     error::{
         EmbargoError,
@@ -13,35 +13,40 @@ use std::{
         File
     },
     io::Write,
-    path::PathBuf,
+    path::{Path, PathBuf},
     process::Command,
 };
 use log::debug;
 
-pub fn create_project(args: Option<NewArgs>) -> EmbargoResult {
+// Path will be some in test cases
+pub fn create_project(args: Option<&NewArgs>, path: Option<&Path>) -> EmbargoResult {
     // newargs: if exists, is the result of embargo new ____
     // if doesn't exist, embargo init
 
-    let mut cwd = match env::current_dir() {
-        Ok(dir) => dir,
-        Err(_) => {
-            
-            return Err(EmbargoError::new("could not create new directory."));
-        },
+    let mut cwd = if let Some(p) = path {
+        p.to_owned()
+    } else {
+        match env::current_dir() {
+            Ok(dir) => dir,
+            Err(_) => {
+                return Err(EmbargoError::new("could not create new directory."));
+            },
+        }
     };
-
+    
     let (package_name, package_dir, is_init_cmd) = if let Some(args) = args {
         let name = args.name();
 
         let mut src_dir = PathBuf::from(name);
         src_dir.push("src");
 
-        if fs::create_dir_all(src_dir).is_err() {
+        cwd.push(src_dir);
+
+        if fs::create_dir_all(&cwd).is_err() {
             return Err(EmbargoError::new("a directory by this name may already exist."));
         }
-
-        cwd.push(name);
-        (name.to_owned(), Some(name.to_owned()), false)
+        cwd.pop(); // remove the src... this is kinda sloppy but it's lazy
+        (name.to_owned(), Some(cwd.as_os_str().to_str().unwrap().to_owned()), false)
     } else {
         if fs::create_dir("src").is_err() {
             debug!("Directory src already exists. May want to flag this for an error in the future");

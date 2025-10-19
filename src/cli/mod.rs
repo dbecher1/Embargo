@@ -4,12 +4,14 @@ pub use clean::CleanArgs;
 pub use new::NewArgs;
 pub use build::{BuildArgs, Profile as BuildProfile};
 pub use run::RunArgs;
+pub use args::Args;
 
 mod new;
 mod project_type;
 mod build;
 mod run;
 mod clean;
+mod args;
 
 #[derive(Subcommand, Debug)]
 pub enum Commands {
@@ -32,4 +34,14 @@ pub enum Commands {
     //Install,
     //Uninstall,
     //Add,
+}
+
+impl Commands {
+    pub fn debug_new(project_name: &str) -> Self {
+        Self::New(NewArgs::with_name(project_name))
+    }
+
+    pub fn debug_build() -> Self {
+        Self::Build(BuildArgs::default())
+    }
 }

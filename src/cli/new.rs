@@ -13,6 +13,16 @@ pub struct NewArgs {
 }
 
 impl NewArgs {
+
+    pub fn with_name(project_name: &str) -> Self {
+        let name = project_name.to_owned();
+        let project_type = ProjectType::default();
+        Self {
+            name,
+            project_type
+        }
+    }
+
     pub fn name(&self) -> &str {
         &self.name
     }

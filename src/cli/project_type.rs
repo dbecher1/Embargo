@@ -12,3 +12,12 @@ pub struct ProjectType {
     #[arg(long)]
     lib: bool,
 }
+
+impl Default for ProjectType {
+    fn default() -> Self {
+        Self {
+            bin: true,
+            lib: false
+        }
+    }
+}

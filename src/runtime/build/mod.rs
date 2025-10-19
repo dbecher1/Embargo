@@ -15,7 +15,7 @@ use log::{debug, error};
 use topological_sort::TopologicalSort;
 use walkdir::{DirEntry, WalkDir};
 use crate::{
-    commands::{BuildArgs, BuildProfile},
+    cli::{BuildArgs, BuildProfile},
     embargo_toml::*,
     error::{EmbargoError, EmbargoResult}
 };
@@ -27,7 +27,7 @@ mod build_file;
 mod serde_helpers;
 
 #[allow(unused_variables)]
-pub fn build_project(args: BuildArgs, embargo_toml: &EmbargoFile, embargo_toml_path: &Path) -> EmbargoResult {
+pub fn build_project(args: &BuildArgs, embargo_toml: &EmbargoFile, embargo_toml_path: &Path) -> EmbargoResult {
 
     let now = Instant::now();
     

@@ -1,11 +1,11 @@
 use std::{fs, path::Path};
 
-use crate::{commands::CleanArgs, embargo_toml::{ConfigFile, EmbargoFile}, error::EmbargoResult};
+use crate::{cli::CleanArgs, embargo_toml::{ConfigFile, EmbargoFile}, error::EmbargoResult};
 
 // Have to polish up error handling by quite a bit
 
 #[allow(unreachable_code)]
-pub fn clean_project(args: CleanArgs, embargo_toml: &EmbargoFile, embargo_toml_path: &Path) -> EmbargoResult {
+pub fn clean_project(args: &CleanArgs, embargo_toml: &EmbargoFile, embargo_toml_path: &Path) -> EmbargoResult {
 
     let mut clean_path = embargo_toml_path.to_path_buf();
 

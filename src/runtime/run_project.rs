@@ -3,13 +3,14 @@ use std::{path::{Path, PathBuf}, process::Command};
 
 use colored::Colorize;
 
-use crate::{commands::{BuildProfile, RunArgs}, embargo_toml::{ConfigFile, EmbargoFile}, error::EmbargoResult};
-
+use crate::cli::{BuildProfile, RunArgs};
+use crate::embargo_toml::{ConfigFile, EmbargoFile};
+use crate::error::EmbargoResult;
 use super::build_project;
 
-pub fn run_project(run_args: RunArgs, embargo_toml: &EmbargoFile, embargo_toml_path: &Path) -> EmbargoResult {
+pub fn run_project(run_args: &RunArgs, embargo_toml: &EmbargoFile, embargo_toml_path: &Path) -> EmbargoResult {
 
-    build_project(run_args.build_args, embargo_toml, embargo_toml_path)?;
+    build_project(&run_args.build_args, embargo_toml, embargo_toml_path)?;
 
     // we have where Embargo.toml is, find the path to the executable
     let mut exec_path = embargo_toml_path.to_path_buf();
