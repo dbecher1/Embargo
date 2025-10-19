@@ -1,11 +1,16 @@
 [package]
 name = "embargo"
-authors = ["Daniel Becher"]
+authors = ["Daniel Becher <danbecherdev@gmail.com>"]
 description = "A C++ build tool for the modern world."
-version = "0.0.1"
+version = "0.1.0"
 edition = "2021"
 readme = "README.md"
 license = "MIT OR Apache-2.0"
+homepage = "https://github.com/dbecher1/Embargo"
+repository = "https://github.com/dbecher1/Embargo"
+documentation = "https://github.com/dbecher1/Embargo"
+keywords = ["embargo", "build", "c++", "make", "cli"]
+categories = ["command-line-utilities"]
 
 [dependencies]
 ahash = { version = "0.8.11", features = ["serde"] }
