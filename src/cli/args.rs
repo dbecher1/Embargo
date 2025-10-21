@@ -1,8 +1,7 @@
 #![allow(unused)]
 
-use clap::Parser;
 use crate::cli::Commands;
-
+use clap::Parser;
 
 #[derive(Parser, Debug)]
 #[command(version, about, long_about = None)]
@@ -16,23 +15,20 @@ pub struct Args {
 }
 
 impl Args {
-    
+    pub fn read_file(&self) -> bool {
+        !matches!(self.command, Commands::Init | Commands::New(_))
+    }
+
     pub fn debug_new(project_name: &str) -> Self {
         let command = Commands::debug_new(project_name);
         let debug_log = false;
-        Self {
-            command,
-            debug_log,
-        }
+        Self { command, debug_log }
     }
 
     pub fn debug_build() -> Self {
         let command = Commands::debug_build();
         let debug_log = false;
-        Self {
-            command,
-            debug_log,
-        }
+        Self { command, debug_log }
     }
 
     /// Returns a reference to the parsed subcommand.
@@ -45,3 +41,4 @@ impl Args {
         self.debug_log
     }
 }
+

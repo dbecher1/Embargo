@@ -1,19 +1,17 @@
-use std::path::Path;
+use crate::cli::Args;
 use embargo_toml::EmbargoFile;
 use error::EmbargoResult;
-use cli::Commands;
 use log::debug;
-use crate::cli::Args;
+use std::path::Path;
 
 pub mod cli;
 mod embargo_toml;
-mod runtime;
 mod error;
+mod runtime;
 
 pub fn run(args: Args, temp_dir: Option<&Path>) -> EmbargoResult {
-    use Commands::*;
 
-    let read_file = !matches!(args.command(), Init | New(_));
+    let read_file = args.read_file();
 
     let (embargo_toml, embargo_toml_path) = if read_file {
         let (temp1, temp2) = EmbargoFile::read_file(temp_dir)?;
@@ -25,3 +23,4 @@ pub fn run(args: Args, temp_dir: Option<&Path>) -> EmbargoResult {
 
     runtime::run(&args, embargo_toml, embargo_toml_path, read_file, temp_dir)
 }
+

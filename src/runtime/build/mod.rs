@@ -6,7 +6,8 @@ use std::{
     io::Write,
     path::{Path, PathBuf},
     process::Command,
-    time::Instant
+    time::Instant,
+    sync::Mutex,
 };
 use build_file::EmbargoBuildFile;
 use colored::Colorize;
@@ -26,7 +27,6 @@ mod cxx_file;
 mod build_file;
 mod serde_helpers;
 
-#[allow(unused_variables)]
 pub fn build_project(args: &BuildArgs, embargo_toml: &EmbargoFile, embargo_toml_path: &Path) -> EmbargoResult {
 
     let now = Instant::now();
@@ -223,6 +223,7 @@ pub fn build_project(args: &BuildArgs, embargo_toml: &EmbargoFile, embargo_toml_
         bin_path.push(&embargo_toml.package.name);
 
         // COMPILE
+        let fs_guard = Mutex::new(());
         
         new_embargo_build.source_files
             .par_iter_mut()
@@ -235,6 +236,19 @@ pub fn build_project(args: &BuildArgs, embargo_toml: &EmbargoFile, embargo_toml_
             .for_each(|path|
             {
                 let mut object_path = object_path.clone();
+                let mut sub = subtract_path(path, &src_dir).unwrap_or_default();
+                sub.pop();
+                object_path.push(sub);
+                // the build directory mirrors the src directory tree
+                // because of that, we need to see if the mirrored directory exists and potentially create it
+                {
+                    let _unused = fs_guard.lock().unwrap();
+                    let exists = fs::exists(&object_path).unwrap_or(false);
+                    if !exists {
+                        let _ = fs::create_dir_all(&object_path);
+                        debug!("Creating object directory: {}", &object_path.display());
+                    }
+                }
                 
                 let mut command = Command::new(embargo_toml.compiler());
 
@@ -247,6 +261,7 @@ pub fn build_project(args: &BuildArgs, embargo_toml: &EmbargoFile, embargo_toml_
                 let filename = path.file_name().unwrap_or_default();
                 let filename = filename.to_str().unwrap_or_default();
                 let filename_o = filename.replace("cpp", "o");
+                
                 object_path.push(filename_o);
                 
                 args.push(object_path.to_str().unwrap_or_default());
@@ -345,4 +360,37 @@ fn is_obj_file(entry: &DirEntry) -> bool {
 fn is_valid_file_ext(path: &Path) -> bool {
     let ext = path.extension().unwrap_or_default();
     is_header(ext) || is_source(ext)
+}
+
+fn subtract_path(lhs: &Path, rhs: &Path) -> Option<PathBuf> {
+    let mut out = lhs.components();
+    for r in rhs.components() {
+        let l = out.next();
+        if let (Some(_), true) = (l, l != Some(r)) {
+            return None
+        }
+    }
+    Some(PathBuf::from_iter(out))
+}
+
+#[cfg(test)]
+mod tests {
+    use std::{path::PathBuf, str::FromStr};
+    use super::*;
+
+    #[test]
+    fn test_subtract_path() {
+        let p1 = PathBuf::from_str("/tmp/test/this/path/test.txt").unwrap();
+        let p2 = PathBuf::from_str("/tmp/test/this/").unwrap();
+        let result1 = subtract_path(&p1, &p2).unwrap();
+        let testval1 = PathBuf::from_str("path/test.txt").unwrap();
+        assert_eq!(&result1, &testval1);
+
+        let testval2 = PathBuf::from_str("path.test.jpg").unwrap();
+        assert_ne!(&result1, &testval2);
+
+        let p3 = PathBuf::from_str("/usr/test/this/").unwrap();
+        let result2 = subtract_path(&p1, &p3);
+        assert!(result2.is_none());
+    }
 }

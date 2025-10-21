@@ -2,9 +2,10 @@ use std::{env, fs, path::PathBuf};
 
 use log::{debug, error};
 use serde::Deserialize;
+use super::toolchain::Toolchain;
 
-use crate::embargo_toml::const_values::GLOBAL_FILE_NAME;
-use super::{const_values::ENV_VAR_NAME, toolchain::Toolchain};
+static ENV_VAR_NAME: &'static str = "EMBARGO_HOME";
+static GLOBAL_FILE_NAME: &'static str = "EmbargoGlobal.toml";
 
 fn git_default() -> bool {
     true
@@ -31,7 +32,7 @@ fn target_release_default() -> String {
 }
 
 fn object_default() -> String {
-    ".artifacts".to_owned()
+    ".o".to_owned()
 }
 
 fn bin_default() -> String {

@@ -1,13 +1,10 @@
-use std::sync::OnceLock;
-use serde::{Serialize, Deserialize};
 use crate::embargo_toml::{cfg_trait::ConfigFile, global_config::EmbargoGlobalConfig};
+use serde::{Deserialize, Serialize};
+use std::sync::LazyLock;
 
 // The global config object, will be filled with values from either the global file or default values
-static GLOBAL_CONF: OnceLock<EmbargoGlobalConfig> = OnceLock::new();
-
-fn global_conf() -> &'static EmbargoGlobalConfig {
-    GLOBAL_CONF.get_or_init(|| EmbargoGlobalConfig::try_read())
-}
+static GLOBAL_CONF: LazyLock<EmbargoGlobalConfig> =
+    LazyLock::new(|| EmbargoGlobalConfig::try_read());
 
 #[derive(Serialize, Deserialize, Debug, Hash)]
 pub struct EmbargoPackageConfig {
@@ -15,10 +12,10 @@ pub struct EmbargoPackageConfig {
     pub version: String,
     pub entry: String,
     pub author: Option<String>,
-    source_path: Option<String>, // relative to Embargo.toml
-    build_path: Option<String>, // relative to Embargo.toml
-    auto_clean: Option<bool>, // Auto-delete .o files
-    object_path: Option<String>, // directory for .o files
+    source_path: Option<String>,       // relative to Embargo.toml
+    build_path: Option<String>,        // relative to Embargo.toml
+    auto_clean: Option<bool>,          // Auto-delete .o files
+    object_path: Option<String>,       // directory for .o files
     target_path_debug: Option<String>, // Relative to build path
     target_path_release: Option<String>,
     bin_path: Option<String>,
@@ -40,26 +37,30 @@ impl EmbargoPackageConfig {
 
 impl<'a> ConfigFile<'a> for EmbargoPackageConfig {
     fn compiler(&'a self) -> &'a str {
-        global_conf().compiler()
+        GLOBAL_CONF.compiler()
     }
 
     fn linker(&'a self) -> &'a str {
-        global_conf().linker()
+        GLOBAL_CONF.linker()
     }
 
     /// Returns the package's source path if set, otherwise the global source path.
     fn source_path(&'a self) -> &'a str {
         //&self.source_path.unwrap_or_else(|| &global_conf().source_path)
-        if let Some(s) = &self.source_path {
+        if let Some(ref s) = self.source_path {
             s
         } else {
-            &global_conf().source_path
+            &GLOBAL_CONF.source_path
         }
     }
 
     /// Returns the package's build path if set, otherwise the global build path.
-    fn build_path(&self) -> String {
-        self.build_path.clone().unwrap_or_else(|| global_conf().build_path.clone())
+    fn build_path(&'a self) -> &'a str {
+        if let Some(ref bp) = self.build_path {
+            bp
+        } else {
+            &GLOBAL_CONF.build_path
+        }
     }
 
     /// Returns whether auto_clean is enabled for this package. Default: false.
@@ -69,38 +70,66 @@ impl<'a> ConfigFile<'a> for EmbargoPackageConfig {
     }
 
     /// Returns the package's object path if set, otherwise the global object path.
-    fn object_path(&self) -> String {
-        self.object_path.clone().unwrap_or_else(|| global_conf().object_path.clone())
+    fn object_path(&'a self) -> &'a str {
+        if let Some(ref op) = self.object_path {
+            op
+        } else {
+            &GLOBAL_CONF.object_path
+        }
     }
 
     /// Returns the package's debug target path if set, otherwise the global debug target path.
-    fn target_path_debug(&self) -> String {
-        self.target_path_debug.clone().unwrap_or_else(|| global_conf().target_path_debug.clone())
+    fn target_path_debug(&'a self) -> &'a str {
+        if let Some(ref tpd) = self.target_path_debug {
+            tpd
+        } else {
+            &GLOBAL_CONF.target_path_debug
+        }
     }
 
     /// Returns the package's release target path if set, otherwise the global release target path.
-    fn target_path_release(&self) -> String {
-        self.target_path_release.clone().unwrap_or_else(|| global_conf().target_path_release.clone())
+    fn target_path_release(&'a self) -> &'a str {
+        if let Some(ref tpr) = self.target_path_release {
+            tpr
+        } else {
+            &GLOBAL_CONF.target_path_release
+        }
     }
 
     /// Returns the package's bin path if set, otherwise the global bin path.
-    fn bin_path(&self) -> String {
-        self.bin_path.clone().unwrap_or_else(|| global_conf().bin_path.clone())
+    fn bin_path(&'a self) -> &'a str {
+        if let Some(ref bp) = self.bin_path {
+            bp
+        } else {
+            &GLOBAL_CONF.bin_path
+        }
     }
 
     /// Returns the package's lib path if set, otherwise the global lib path.
-    fn lib_path(&self) -> String {
-        self.lib_path.clone().unwrap_or_else(|| global_conf().lib_path.clone())
+    fn lib_path(&'a self) -> &'a str {
+        if let Some(ref lp) = self.lib_path {
+            lp
+        } else {
+            &GLOBAL_CONF.lib_path
+        }
     }
 
     /// Returns compiler flags for this package. If unset, returns an empty Vec.
-    fn flags(&self) -> Vec<String> {
-        self.flags.clone().unwrap_or_default()
+    fn flags(&'a self) -> &'a [String] {
+        if let Some(ref f) = self.flags {
+            f
+        } else {
+            &[]
+        }
     }
 
     /// Returns runtime args for this package. If unset, returns an empty Vec.
-    fn args(&self) -> Vec<String> {
-        self.args.clone().unwrap_or_default()
+    fn args(&'a self) -> &'a [String] {
+        if let Some(ref a) = self.args {
+            a
+        } else {
+            &[]
+        }
     }
 
     /// Returns the package author, if present.
@@ -129,3 +158,4 @@ impl Default for EmbargoPackageConfig {
         }
     }
 }
+
