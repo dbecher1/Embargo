@@ -12,6 +12,10 @@ documentation = "https://github.com/dbecher1/Embargo"
 keywords = ["embargo", "build", "c++", "make", "cli"]
 categories = ["command-line-utilities"]
 
+[[bin]]
+name = "embargo"
+path = "src/main.rs"
+
 [dependencies]
 ahash = { version = "0.8.11", features = ["serde"] }
 clap = { version = "4.5.23", features = ["derive", "color"] }

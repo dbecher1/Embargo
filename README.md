@@ -2,23 +2,18 @@
 
 A C++ build tool for the modern world.
 
+[![Crates.io Version](https://img.shields.io/crates/v/embargo-cpp)](https://crates.io/crates/embargo-cpp)
+[![GitHub Actions Workflow Status](https://img.shields.io/github/actions/workflow/status/dbecher1/embargo-cpp/rust.yml)](https://github.com/dbecher1/embargo-cpp/actions)
+
 ## Motivation
 
 Inspired by Rust's Cargo in more than just name, the vision for Embargo is to create a build system that brings accessibility to the novice programmer, while not sacrificing power, performance and customizability for the power user.
 
 This tool is just barely in its infancy, so almost if not all features mentioned are likely to be in progress, if not entirely yet unimplemented. The purpose for this README is, as of now, mostly to cast vision for how exciting Embargo can and should be.
 
-## Project Status
+## Project Status and Roadmap
 
-The project is in a minimally working alpha phase currently. Currently working functionality will be outlined below; the next steps are as follows:
-
-- Properly implement default platform paths
-- Implement Github actions - build tests for cross-platform compilation, unit tests for functionality, and pre-compiled binaries
-- Implement external package management (add/remove command)
-- Finish implementing clean functionality
-- Bug test more thoroughly on target platforms; additionally, clean up exception handling
-- Add more flags for currently implemented commands
-- Add color to output (low priority)
+The project is in a minimally working alpha phase currently. Init, New, Build and Run commands are implemented with limited flags/options. For planned features, see the Github issues for this repository.
 
 ## Requirements
 
@@ -27,7 +22,9 @@ The project is in a minimally working alpha phase currently. Currently working f
 
 ## Installation
 
-If `cargo` is installed, the source code can be compiled as easily as running `cargo build --release` from within the project directory. I intend to have pre-compiled binaries available for download within the near future. The binary can then be added to the PATH environment variable, however the user chooses to do so.
+`cargo install embargo-cpp`
+
+This will install the embargo binary.
 
 ## Usage
 
