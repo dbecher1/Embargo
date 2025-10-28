@@ -1,5 +1,5 @@
 [package]
-name = "embargo"
+name = "embargo-cpp"
 authors = ["Daniel Becher <danbecherdev@gmail.com>"]
 description = "A C++ build tool for the modern world."
 version = "0.1.0"

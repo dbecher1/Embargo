@@ -1,6 +1,6 @@
 use clap::Parser;
 use colored::Colorize;
-use embargo::{cli::Args, run};
+use embargo_cpp::{cli::Args, run};
 use log::LevelFilter;
 
 static LOG_LEVEL_DEBUG: LevelFilter = LevelFilter::Trace;

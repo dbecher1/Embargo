@@ -1,4 +1,4 @@
-# Embargo
+# embargo-cpp
 
 A C++ build tool for the modern world.
 

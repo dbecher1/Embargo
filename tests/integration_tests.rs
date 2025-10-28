@@ -1,4 +1,4 @@
-use embargo::{cli::Args, run};
+use embargo_cpp::{cli::Args, run};
 use assert_fs::prelude::*;
 use serial_test::serial;
 
