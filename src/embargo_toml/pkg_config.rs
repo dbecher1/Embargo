@@ -4,7 +4,7 @@ use std::sync::LazyLock;
 
 // The global config object, will be filled with values from either the global file or default values
 static GLOBAL_CONF: LazyLock<EmbargoGlobalConfig> =
-    LazyLock::new(|| EmbargoGlobalConfig::try_read());
+    LazyLock::new(EmbargoGlobalConfig::try_read);
 
 #[derive(Serialize, Deserialize, Debug, Hash)]
 pub struct EmbargoPackageConfig {

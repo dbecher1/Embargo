@@ -74,7 +74,7 @@ fn gen_deps(path: &Path) -> Result<Vec<PathBuf>, String> {
         .arg(path.to_str().unwrap_or_default())
         .args(["-MM", "-MG"]).output();
 
-    return match output {
+    match output {
         Ok(output) => {
             if output.status.success() {
                 let s = String::from_utf8_lossy(&output.stdout);

@@ -4,8 +4,8 @@ use log::{debug, error};
 use serde::Deserialize;
 use super::toolchain::Toolchain;
 
-static ENV_VAR_NAME: &'static str = "EMBARGO_HOME";
-static GLOBAL_FILE_NAME: &'static str = "EmbargoGlobal.toml";
+static ENV_VAR_NAME: &str = "EMBARGO_HOME";
+static GLOBAL_FILE_NAME: &str = "EmbargoGlobal.toml";
 
 fn git_default() -> bool {
     true
@@ -96,7 +96,7 @@ impl Default for EmbargoGlobalConfig {
 impl EmbargoGlobalConfig {
 
     pub fn compiler(&self) -> &str {
-        &self.toolchain.compiler()
+        self.toolchain.compiler()
     }
 
     pub fn linker(&self) -> &str {

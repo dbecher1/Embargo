@@ -4,8 +4,8 @@ use serde::Deserialize;
 #[derive(Deserialize, Debug, Hash)]
 #[serde(rename_all = "lowercase")]
 pub enum Toolchain {
-    LLVM,
-    GCC,
+    Llvm,
+    Gcc,
 }
 
 impl Toolchain {
@@ -14,16 +14,16 @@ impl Toolchain {
     pub fn compiler(&self) -> &str {
         // check for
         match self {
-            Toolchain::LLVM => {
+            Toolchain::Llvm => {
                 "clang++"
             },
-            Toolchain::GCC => "g++",
+            Toolchain::Gcc => "g++",
         }
     }
 
     pub fn linker(&self) -> &str {
         match self {
-            Toolchain::LLVM => {
+            Toolchain::Llvm => {
                 if cfg!(target_os = "macos") {
                     "lld64.lld"
                 } else if cfg!(unix) {
@@ -34,13 +34,13 @@ impl Toolchain {
                     "ld"
                 }
             },
-            Toolchain::GCC => "g++",
+            Toolchain::Gcc => "g++",
         }
     }
 }
 
 impl Default for Toolchain {
     fn default() -> Self {
-        Self::GCC
+        Self::Gcc
     }
 }

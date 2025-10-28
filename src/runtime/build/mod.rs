@@ -37,17 +37,17 @@ pub fn build_project(args: &BuildArgs, embargo_toml: &EmbargoFile, embargo_toml_
 
     // Check to see if there are overridden values in the Embargo.toml file
     let mut src_dir = cwd.clone();
-    src_dir.push(&embargo_toml.source_path());
+    src_dir.push(embargo_toml.source_path());
 
     let mut buildfile_path = cwd.clone();
-    buildfile_path.push(&embargo_toml.build_path());
+    buildfile_path.push(embargo_toml.build_path());
 
     match args.profile {
         BuildProfile::Debug => {
-            buildfile_path.push(&embargo_toml.target_path_debug());
+            buildfile_path.push(embargo_toml.target_path_debug());
         },
         BuildProfile::Release => {
-            buildfile_path.push(&embargo_toml.target_path_release());
+            buildfile_path.push(embargo_toml.target_path_release());
         },
     }
 
@@ -209,12 +209,11 @@ pub fn build_project(args: &BuildArgs, embargo_toml: &EmbargoFile, embargo_toml_
             */
             // set the artifact path from the build path and return it
             let mut object_path = bin_path.clone();
-            object_path.push(&embargo_toml.object_path());
+            object_path.push(embargo_toml.object_path());
 
             object_path
         };
-        // assignment so if an error happens it's not propigated
-        let _ = fs::create_dir_all(&object_path)?;
+        fs::create_dir_all(&object_path)?;
 
         // TODO: this will have to be rearranged for when library stuff is supported
         bin_path.push(embargo_toml.bin_path());
@@ -317,10 +316,7 @@ pub fn build_project(args: &BuildArgs, embargo_toml: &EmbargoFile, embargo_toml_
             }
         }
 
-        let new_buildfile = match File::create(buildfile_path) {
-            Ok(bf) => Some(bf),
-            Err(_) => None,
-        };
+        let new_buildfile = File::create(buildfile_path).ok();
         
         let new_str = toml::to_string_pretty(&new_embargo_build)?;
         if let Some(mut file) = new_buildfile {
